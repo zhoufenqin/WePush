@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Assessment - WePush</title>
+<style>
+:root {
+  --bg-primary: #ffffff;
+  --bg-card: #f8f9fa;
+  --bg-page: #f0f1f3;
+  --text-primary: #24292f;
+  --text-secondary: #57606a;
+  --text-muted: #6b7280;
+  --border-color: #d0d7de;
+  --border-light: #e1e4e8;
+  --link-color: #2563eb;
+  --color-mandatory: #E3008C;
+  --color-potential: #637CEF;
+  --color-optional: #A19F9D;
+  --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --font-mono: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-family); font-size: 13px; color: var(--text-primary); background: var(--bg-primary); line-height: 1.5; margin: 0; padding: 0; }
+a { color: var(--link-color); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Page layout ───────────────────────────────────────────── */
+.main { margin: 0; padding: 24px 32px; background: var(--bg-primary); }
+.back-link { color: var(--text-muted); font-size: 13px; margin-bottom: 16px; display: block; }
+h1 { font-weight: 600; font-size: 20px; color: var(--text-primary); margin-bottom: 20px; }
+
+/* ── Report cards (matches VS Code .vscode-report-card) ──── */
+.report-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 4px; padding: 12px; margin-bottom: 20px; }
+.report-card h2 { font-size: 14px; font-weight: 600; margin: 0; color: var(--text-primary); }
+.report-card-body { margin-top: 16px; }
+
+/* ── Component Information (two-column) ────────────────── */
+.app-info-container { display: flex; gap: 8px; flex-wrap: wrap; }
+.app-info-column { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 8px; }
+.app-info-row { display: flex; align-items: baseline; }
+.app-info-label { width: 136px; flex-shrink: 0; font-weight: 600; color: var(--text-primary); }
+.app-info-value { flex: 1; color: var(--text-primary); }
+
+/* ── Issue Summary (pie charts + legend) ─────────────────── */
+.cards-container { display: flex; align-items: stretch; gap: 20px; flex-wrap: wrap; }
+.issue-summary-card { flex: 2; }
+.domain-summary-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-around; }
+.domain-summary-item { flex: 1; min-width: 120px; text-align: center; padding: 0 16px; border-right: 1px solid var(--border-light); }
+.domain-summary-item:last-child { border-right: none; }
+.domain-summary-item h3 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-top: 8px; }
+.domain-summary-item .count { font-size: 12px; color: var(--text-secondary); }
+.criticality-legend { display: flex; flex-wrap: wrap; gap: 15px; padding-top: 12px; justify-content: center; }
+.criticality-legend .legend-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+.legend-swatch { display: inline-block; width: 1em; height: 1em; border-radius: 2px; }
+
+/* ── Issue list tables ───────────────────────────────────── */
+.issue-section { margin-top: 20px; }
+.issue-section h2 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.issue-table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 600px; }
+.issue-table th { text-align: left; text-transform: uppercase; font-weight: 600; font-size: calc(13px * 0.875); padding: 6px 8px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); color: var(--text-secondary); position: sticky; top: 0; z-index: 1; }
+.issue-table td { padding: 12px 8px; border-bottom: 1px solid var(--border-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.col-issue { width: 55%; }
+.col-criticality { width: 25%; }
+.col-storypoint { width: 20%; }
+
+/* ── Target dropdown ─────────────────────────────────────── */
+.target-select-container { margin: 4px 0 16px 0; display: flex; align-items: center; gap: 8px; }
+.target-select-container label { font-weight: 600; color: var(--text-primary); font-size: 14px; }
+.target-select-container select { font-family: var(--font-family); font-size: 13px; padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-primary); color: var(--text-primary); cursor: pointer; }
+
+/* ── Filter bar ──────────────────────────────────────────── */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 16px; margin: 16px 0 8px 0; align-items: center; }
+.multi-select { position: relative; display: inline-block; min-width: 140px; }
+.multi-select-btn { font-family: var(--font-family); font-size: 13px; padding: 4px 24px 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-primary); color: var(--text-primary); cursor: pointer; width: 100%; text-align: left; position: relative; white-space: nowrap; }
+.multi-select-btn::after { content: '\25BE'; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-secondary); }
+.multi-select-dropdown { display: none; position: absolute; top: 100%; left: 0; min-width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; margin-top: 2px; }
+.multi-select.open .multi-select-dropdown { display: block; }
+.multi-select-option { display: flex; align-items: center; gap: 6px; padding: 5px 10px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+.multi-select-option:hover { background: var(--bg-secondary); }
+.multi-select-option input[type=checkbox] { margin: 0; cursor: pointer; }
+.clear-filters { font-size: 12px; color: var(--link-color); cursor: pointer; margin-left: 4px; }
+
+/* ── Criticality labels (colored square + text) ──────────── */
+.crit-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; }
+.crit-square { display: inline-block; width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.crit-square-mandatory { background: var(--color-mandatory); }
+.crit-square-potential { background: var(--color-potential); }
+.crit-square-optional { background: var(--color-optional); }
+
+/* ── Expandable rows ─────────────────────────────────────── */
+.expand-btn { background: none; border: none; cursor: pointer; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; transition: transform 0.15s; padding: 0; vertical-align: middle; flex-shrink: 0; }
+.expand-btn.open { transform: rotate(90deg); }
+.issue-title-cell { display: flex; align-items: center; gap: 4px; }
+.detail-row td { padding: 0; border-bottom: 1px solid var(--border-light); white-space: normal; overflow: visible; text-overflow: clip; }
+.detail-content { display: flex; gap: 0; padding: 8px 8px 8px 32px; min-width: 0; }
+.file-list { flex: 0 0 50%; min-width: 0; overflow: hidden; }
+.file-list table { width: 100%; border-collapse: collapse; }
+.file-list th { font-size: calc(13px * 0.875); text-transform: uppercase; font-weight: 600; color: var(--text-secondary); padding: 6px 8px; border-bottom: 1px solid var(--border-color); text-align: left; height: 32px; }
+.file-list td { font-size: 13px; padding: 6px 8px; border-bottom: 1px solid var(--border-light); color: var(--text-primary); }
+.file-list .file-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 300px; display: block; }
+.file-list .position { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); }
+.explanation-panel { flex: 1; padding-left: 16px; min-width: 0; overflow-wrap: break-word; word-wrap: break-word; }
+.explanation-panel h4 { font-size: calc(13px * 0.875); text-transform: uppercase; font-weight: 600; color: var(--text-secondary); padding: 6px 0; border-bottom: 1px solid var(--border-color); height: 32px; margin: 0; }
+.explanation-panel p { font-size: 13px; padding: 8px 0; color: var(--text-primary); line-height: 1.6; white-space: normal; word-break: break-word; }
+
+/* ── Experimental badge ──────────────────────────────────── */
+.badge-experimental { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #fef9c3; color: #854d0e; vertical-align: middle; margin-left: 8px; cursor: default; }
+
+/* ── Footer ──────────────────────────────────────────────── */
+.footer { text-align: center; margin-top: 24px; color: var(--text-muted); font-size: 13px; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 800px) {
+  .main { padding: 16px; }
+  .app-info-container { flex-direction: column; }
+  .domain-summary-container { flex-direction: column; }
+  .domain-summary-item { border-right: none; border-bottom: 1px solid var(--border-light); padding-bottom: 12px; }
+  .detail-content { flex-direction: column; }
+  .file-list { flex: none; width: 100%; }
+  .explanation-panel { padding-left: 0; padding-top: 8px; }
+}
+/* ── Tab navigation ──────────────────────────────────────── */
+.tab-nav { display: flex; gap: 0; border-bottom: 1px solid var(--border-color); margin-bottom: 28px; flex-wrap: wrap; }
+.tab-btn { background: none; border: none; border-bottom: 2px solid transparent; padding: 10px 18px; font-size: 13px; font-family: var(--font-family); color: var(--text-secondary); cursor: pointer; margin-bottom: -1px; white-space: nowrap; position: relative; }
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--link-color); border-bottom-color: var(--link-color); font-weight: 600; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Tooltip on tab ──────────────────────────────────────── */
+.tab-btn[data-tooltip]::after { content: attr(data-tooltip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #24292f; color: #ffffff; font-size: 12px; font-weight: 400; padding: 6px 10px; border-radius: 4px; white-space: normal; width: max-content; max-width: 260px; text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 100; }
+.tab-btn[data-tooltip]:hover::after { opacity: 1; }
+
+/* ── Fact content — prose column ─────────────────────────── */
+.fact-content { max-width: 860px; margin: 0 auto; line-height: 1.75; color: var(--text-primary); font-size: 14px; }
+.fact-content h1 { font-size: 22px; font-weight: 700; margin: 0 0 6px 0; color: var(--text-primary); letter-spacing: -0.01em; }
+.fact-content h1 + p { margin-top: 6px; color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+.fact-content h2 { font-size: 17px; font-weight: 700; margin: 36px 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); letter-spacing: -0.01em; }
+.fact-content h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px 0; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.04em; font-size: 12px; color: var(--text-secondary); }
+.fact-content p { margin: 10px 0; color: var(--text-primary); }
+.fact-content ul, .fact-content ol { margin: 10px 0 10px 22px; }
+.fact-content li { margin: 5px 0; }
+.fact-content a { color: var(--link-color); }
+.fact-content a:hover { text-decoration: underline; }
+
+/* ── Fact tables ─────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin: 16px 0; }
+.fact-content table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 13px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color); }
+.fact-content thead { background: var(--bg-card); }
+.fact-content th { text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 14px; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); }
+.fact-content td { padding: 9px 14px; border-bottom: 1px solid var(--border-light); vertical-align: top; color: var(--text-primary); }
+.fact-content tr:last-child td { border-bottom: none; }
+.fact-content tbody tr:hover { background: #f6f8fa; }
+
+/* ── Fact code ───────────────────────────────────────────── */
+.fact-content code { font-family: var(--font-mono); font-size: 12px; background: #f0f1f3; padding: 2px 6px; border-radius: 4px; color: #c7254e; }
+.fact-content pre { background: #f6f8fa; border: 1px solid var(--border-light); border-radius: 6px; padding: 14px 16px; overflow-x: auto; margin: 14px 0; }
+.fact-content pre code { background: none; color: var(--text-primary); padding: 0; border-radius: 0; }
+.fact-content hr { border: none; border-top: 1px solid var(--border-light); margin: 28px 0; }
+.fact-content strong { font-weight: 600; }
+.fact-content em { font-style: italic; }
+.fact-content blockquote { border-left: 3px solid var(--border-color); margin: 12px 0; padding: 4px 16px; color: var(--text-secondary); }
+.fact-unavailable { padding: 32px 0; }
+.fact-unavailable h3 { font-size: 16px; font-weight: 600; color: var(--text-primary); text-transform: none; letter-spacing: 0; margin: 0 0 12px 0; }
+.fact-unavailable p { margin: 0 0 8px 0; color: var(--text-secondary); }
+.fact-unavailable ol, .fact-unavailable ul { margin: 0 0 0 22px; color: var(--text-primary); }
+.fact-unavailable li { margin: 6px 0; }
+
+/* ── Mermaid diagram card ─────────────────────────────────── */
+.mermaid { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; padding: 24px 16px; margin: 20px 0; overflow-x: auto; text-align: center; cursor: pointer; position: relative; }
+.mermaid:hover { border-color: var(--border-color); }
+.mermaid svg { max-width: 100%; height: auto !important; display: inline-block; }
+.mermaid-zoom-hint { position: absolute; top: 8px; right: 10px; font-size: 11px; color: var(--text-muted); opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+.mermaid:hover .mermaid-zoom-hint { opacity: 1; }
+
+/* ── Diagram lightbox ────────────────────────────────────── */
+.diagram-lightbox { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(2px); align-items: center; justify-content: center; cursor: zoom-out; padding: 48px 32px; }
+.diagram-lightbox.open { display: flex; }
+.diagram-lightbox-inner { background: #ffffff; border-radius: 10px; padding: 32px; width: 88vw; max-height: 88vh; overflow: hidden; cursor: default; box-shadow: 0 24px 64px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; }
+.diagram-lightbox-inner svg { width: 100% !important; height: auto !important; max-height: 76vh; display: block; }
+.diagram-lightbox-close { position: fixed; top: 20px; right: 24px; background: #ffffff; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1001; }
+.diagram-lightbox-close:hover { background: var(--bg-card); }
+.diagram-lightbox-hint { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.55); color: #ffffff; font-size: 12px; padding: 6px 14px; border-radius: 20px; pointer-events: none; white-space: nowrap; z-index: 1001; }
+</style>
+<script>
+window.__mermaidPending = [];
+window.__mermaidReady = false;
+window.__renderMermaidIn = function(container) {
+  if (container) { window.__mermaidPending.push(container); }
+};
+</script>
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+mermaid.initialize({ startOnLoad: false, theme: 'default', flowchart: { useMaxWidth: true }, sequence: { useMaxWidth: true } });
+
+window.__renderMermaidIn = function(container) {
+  var nodes = container ? container.querySelectorAll('.mermaid:not([data-processed])') : [];
+  if (nodes.length > 0) {
+    mermaid.run({ nodes: Array.from(nodes) }).then(function() {
+      nodes.forEach(function(node) {
+        if (!node.querySelector('.mermaid-zoom-hint')) {
+          var hint = document.createElement('span');
+          hint.className = 'mermaid-zoom-hint';
+          hint.textContent = 'Click to expand';
+          node.appendChild(hint);
+        }
+      });
+    });
+  }
+};
+
+var drained = new Set();
+(window.__mermaidPending || []).forEach(function(c) {
+  if (!drained.has(c)) { drained.add(c); window.__renderMermaidIn(c); }
+});
+window.__mermaidPending = [];
+window.__mermaidReady = true;
+
+function renderActivePanels() {
+  document.querySelectorAll('.tab-panel.active').forEach(function(p) {
+    if (!drained.has(p)) { drained.add(p); window.__renderMermaidIn(p); }
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderActivePanels);
+} else {
+  renderActivePanels();
+}
+</script>
+</head><body>
+<div id="diagram-lightbox" class="diagram-lightbox" role="dialog" aria-modal="true">
+  <button class="diagram-lightbox-close" id="diagram-lightbox-close" aria-label="Close">&#x2715;</button>
+  <div class="diagram-lightbox-hint">Scroll to zoom &nbsp;&middot;&nbsp; Drag to pan &nbsp;&middot;&nbsp; Double-click to reset</div>
+  <div class="diagram-lightbox-inner" id="diagram-lightbox-inner"></div>
+</div>
+<div class="main">
+<h1>WePush</h1>
+<div class="report-card">
+  <h2>Component Information</h2>
+  <div class="report-card-body">
+    <div class="app-info-container">
+      <div class="app-info-column">
+        <div class="app-info-row"><span class="app-info-label">Component Name</span><span class="app-info-value">WePush</span></div>
+        <div class="app-info-row"><span class="app-info-label">Java Version</span><span class="app-info-value">21</span></div>
+        <div class="app-info-row"><span class="app-info-label">Effort</span><span class="app-info-value" id="effort-display">M (total story points: 49)</span></div>
+      </div>
+      <div class="app-info-column">
+        <div class="app-info-row"><span class="app-info-label">Build Tools</span><span class="app-info-value">Maven</span></div>
+        <div class="app-info-row"><span class="app-info-label">Frameworks</span><span class="app-info-value">N/A</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="tab-issues" data-tooltip="Issues detected in the source code">Issues</button>
+  <button class="tab-btn" data-tab="tab-arch" data-tooltip="How the app&#x27;s layers connect — from UI to data.">Architecture</button>
+  <button class="tab-btn" data-tab="tab-api" data-tooltip="Endpoints exposed by this app and how services communicate.">API Contracts</button>
+  <button class="tab-btn" data-tab="tab-config" data-tooltip="Environment settings, runtime profiles, and deployment manifests.">Configuration</button>
+  <button class="tab-btn" data-tab="tab-workflows" data-tooltip="Domain entities and the core flows users move through.">Business Workflows</button>
+  <button class="tab-btn" data-tab="tab-deps" data-tooltip="Libraries and frameworks this app depends on, grouped by category.">Dependencies</button>
+  <button class="tab-btn" data-tab="tab-data" data-tooltip="Database schema, entity relationships, and persistence behavior.">Data Model</button>
+</nav>
+<div id="tab-issues" class="tab-panel active">
+<div class="target-select-container">
+  <label for="target-select">Target Compute Service:</label>
+  <select id="target-select" onchange="onTargetChange(this.value)">
+    <option value="azure-aks">Azure Kubernetes Service</option>
+  </select>
+</div>
+<div class="report-card">
+  <h2>Issue Summary</h2>
+  <div class="report-card-body">
+    <div class="domain-summary-container" id="donut-container">
+      <div class="domain-summary-item">
+<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;transform:rotate(-90deg);">
+  <circle cx="50" cy="50" r="35" fill="none" stroke="var(--color-mandatory)" stroke-width="15" stroke-dasharray="108.46 219.91" stroke-dashoffset="-0.00"/>
+  <circle cx="50" cy="50" r="35" fill="none" stroke="var(--color-potential)" stroke-width="15" stroke-dasharray="25.99 219.91" stroke-dashoffset="-109.96"/>
+  <circle cx="50" cy="50" r="35" fill="none" stroke="var(--color-optional)" stroke-width="15" stroke-dasharray="80.97 219.91" stroke-dashoffset="-137.44"/>
+</svg>
+
+        <h3>Cloud Readiness</h3>
+        <div class="count">8 issues</div>
+      </div>
+      <div class="domain-summary-item">
+<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;transform:rotate(-90deg);">
+  <circle cx="50" cy="50" r="35" fill="none" stroke="var(--color-optional)" stroke-width="15" stroke-dasharray="219.91 219.91" stroke-dashoffset="-0.00"/>
+</svg>
+
+        <h3>Java Upgrade</h3>
+        <div class="count">1 issue</div>
+      </div>
+    </div>
+    <div class="criticality-legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--color-mandatory)"></span>Mandatory</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--color-potential)"></span>Potential</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--color-optional)"></span>Optional</div>
+    </div>
+  </div>
+</div>
+<div class="filter-bar" id="filter-bar">
+  <div class="multi-select" id="domain-ms">
+    <button class="multi-select-btn" onclick="toggleMultiSelect('domain-ms')">Domain</button>
+    <div class="multi-select-dropdown">
+      <label class="multi-select-option"><input type="checkbox" value="cloud-readiness" onchange="onMultiSelectChange('domain-ms','Domain')"/> Cloud Readiness</label>
+      <label class="multi-select-option"><input type="checkbox" value="java-upgrade" onchange="onMultiSelectChange('domain-ms','Domain')"/> Java Upgrade</label>
+    </div>
+  </div>
+  <div class="multi-select" id="criticality-ms">
+    <button class="multi-select-btn" onclick="toggleMultiSelect('criticality-ms')">Criticality</button>
+    <div class="multi-select-dropdown">
+      <label class="multi-select-option"><input type="checkbox" value="mandatory" onchange="onMultiSelectChange('criticality-ms','Criticality')"/> Mandatory</label>
+      <label class="multi-select-option"><input type="checkbox" value="potential" onchange="onMultiSelectChange('criticality-ms','Criticality')"/> Potential</label>
+      <label class="multi-select-option"><input type="checkbox" value="optional" onchange="onMultiSelectChange('criticality-ms','Criticality')"/> Optional</label>
+    </div>
+  </div>
+  <a class="clear-filters" href="javascript:void(0)" onclick="clearAllFilters()">Clear all</a>
+</div>
+<div class="issue-section" data-domain="cloud-readiness">
+  <h2>Cloud Readiness</h2>
+  <table class="issue-table">
+    <colgroup><col class="col-issue"/><col class="col-criticality"/><col class="col-storypoint"/></colgroup>
+    <thead><tr><th>Issue Category</th><th>Criticality</th><th>Story Point</th></tr></thead>
+    <tbody>
+    <tr class="issue-row" data-criticality="mandatory" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:3,&quot;severity&quot;:&quot;mandatory&quot;},&quot;azure-appservice&quot;:{&quot;effort&quot;:3,&quot;severity&quot;:&quot;mandatory&quot;},&quot;azure-container-apps&quot;:{&quot;effort&quot;:3,&quot;severity&quot;:&quot;mandatory&quot;}}' data-default-effort="3" data-default-severity="mandatory" data-rule="unsecure-network-protocol-00000" onclick="toggleRow('row-cloudreadiness-0', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-0">&#x276F;</button> Use of unsecured network protocols or URI libraries</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-mandatory"></span>Mandatory</span></td>
+      <td class="sp-cell">3</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-0" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/component/TopMenuBar.java">src/main/java/com/fangxuele/tool/push/ui/component/TopMenuBar.java</span></td><td><span class="position">Line 226</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/CommonTipsDialog.java">src/main/java/com/fangxuele/tool/push/ui/dialog/CommonTipsDialog.java</span></td><td><span class="position">Line 71</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/form/msg/MailMsgForm.java">src/main/java/com/fangxuele/tool/push/ui/form/msg/MailMsgForm.java</span></td><td><span class="position">Line 72</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/form/msg/MailMsgForm.java">src/main/java/com/fangxuele/tool/push/ui/form/msg/MailMsgForm.java</span></td><td><span class="position">Line 242</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/form/account/WxMpAccountForm.java">src/main/java/com/fangxuele/tool/push/ui/form/account/WxMpAccountForm.java</span></td><td><span class="position">Line 295</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/NewTaskDialog.java">src/main/java/com/fangxuele/tool/push/ui/dialog/NewTaskDialog.java</span></td><td><span class="position">Line 215</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/NewTaskDialog.java">src/main/java/com/fangxuele/tool/push/ui/dialog/NewTaskDialog.java</span></td><td><span class="position">Line 979</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>Using secured protocols such as HTTPS and SFTP (over HTTP and FTP) should now be the norm as applications are more and more exposed and interconnected. <br/>This CloudReady patterns looks for unescured URI in the source code or deprecated URI libraries. <br/>Ideally, URLs should be replaced in your source code by secured protocols HTTPS and SFTP (and ensure the infrastructure implements these protocols for the resources your application calls, uses or references).</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="mandatory" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:8,&quot;severity&quot;:&quot;mandatory&quot;},&quot;azure-appservice&quot;:{&quot;effort&quot;:8,&quot;severity&quot;:&quot;mandatory&quot;},&quot;azure-container-apps&quot;:{&quot;effort&quot;:8,&quot;severity&quot;:&quot;mandatory&quot;}}' data-default-effort="8" data-default-severity="mandatory" data-rule="cra-insecure-tls-trust-all-03000" onclick="toggleRow('row-cloudreadiness-1', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-1">&#x276F;</button> CRA: Certificate validation bypass - TrustAllCerts</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-mandatory"></span>Mandatory</span></td>
+      <td class="sp-cell">8</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-1" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/logic/msgsender/HwYunMsgSender.java">src/main/java/com/fangxuele/tool/push/logic/msgsender/HwYunMsgSender.java</span></td><td><span class="position">Line 21</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/logic/msgsender/HwYunMsgSender.java">src/main/java/com/fangxuele/tool/push/logic/msgsender/HwYunMsgSender.java</span></td><td><span class="position">Line 170</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p><strong>EU Cyber Resilience Act (Annex I, Part I, Section 2(c)(d))</strong> requires that data confidentiality and integrity are protected during transit using state of the art mechanisms.</p><p>Implementing a custom <code>X509TrustManager</code> that does not properly validate certificates (trust-all pattern) completely disables TLS certificate verification. This makes the application vulnerable to man-in-the-middle (MITM) attacks.</p><p><strong>Recommended actions:</strong></p><ul><li>Remove custom <code>TrustManager</code> implementations that accept all certificates.</li><li>Use the default <code>TrustManagerFactory</code> with the system or a properly configured trust store.</li><li>If you need custom certificate handling, use certificate pinning instead.</li><li>For development/testing, use profiles or environment-specific configurations instead of disabling validation in code.</li></ul></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="mandatory" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:1,&quot;severity&quot;:&quot;mandatory&quot;},&quot;azure-appservice&quot;:{&quot;effort&quot;:1,&quot;severity&quot;:&quot;mandatory&quot;},&quot;azure-container-apps&quot;:{&quot;effort&quot;:1,&quot;severity&quot;:&quot;mandatory&quot;}}' data-default-effort="1" data-default-severity="mandatory" data-rule="logging-0002" onclick="toggleRow('row-cloudreadiness-2', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-2">&#x276F;</button> Avoid File System Logging in Configuration</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-mandatory"></span>Mandatory</span></td>
+      <td class="sp-cell">1</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-2" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="src/main/resources/logback.xml">src/main/resources/logback.xml</span></td><td><span class="position">Line 9</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/resources/logback.xml">src/main/resources/logback.xml</span></td><td><span class="position">Line 20</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>Detected a logging configuration that writes logs to the local file system. In Azure environments, file-based appenders are discouraged due to ephemeral storage and lack of centralized access.</p><p>Recommendations:</p><ul><li>Switch to console appenders only (Logback / Log4j) and disable file or rolling file appenders.</li><li>Collect logs using Azure Monitor Logs (workspace-based Application Insights) via diagnostic settings.</li><li>Output structured JSON logs to improve KQL querying and cross-service correlation.</li></ul></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="mandatory" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:3,&quot;severity&quot;:&quot;mandatory&quot;},&quot;azure-container-apps&quot;:{&quot;effort&quot;:3,&quot;severity&quot;:&quot;mandatory&quot;}}' data-default-effort="3" data-default-severity="mandatory" data-rule="dockerfile-00000" onclick="toggleRow('row-cloudreadiness-3', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-3">&#x276F;</button> No Dockerfile found</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-mandatory"></span>Mandatory</span></td>
+      <td class="sp-cell">3</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-3" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>No Dockerfile was found in the project. This suggests the application may not yet be containerized. <br/>Consider creating a Dockerfile to enable container-based replatforming to Azure services such as Azure Container Apps or AKS.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="potential" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:5,&quot;severity&quot;:&quot;potential&quot;},&quot;azure-appservice&quot;:{&quot;effort&quot;:5,&quot;severity&quot;:&quot;potential&quot;},&quot;azure-container-apps&quot;:{&quot;effort&quot;:5,&quot;severity&quot;:&quot;potential&quot;}}' data-default-effort="5" data-default-severity="potential" data-rule="azure-database-mysql-01000" onclick="toggleRow('row-cloudreadiness-4', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-4">&#x276F;</button> MySQL database found</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-potential"></span>Potential</span></td>
+      <td class="sp-cell">5</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-4" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="pom.xml">pom.xml</span></td><td><span class="position">Line 156</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>To migrate a Java application that uses a MySQL database to Azure, you can follow these recommendations:</p><p> * Use a managed <strong>Azure Database for MySQL</strong>: For that create a managed MySQL database in Azure and choose the appropriate pricing tier based on your application&#x27;s requirements for performance, storage, and availability.</p><p> * <strong>Migrate</strong> the existing MySQL database: For that you can use the Azure Database Migration Service (DMS) to perform an online migration with minimal downtime.</p><p> * Update the application&#x27;s <strong>database connection</strong> details: Modify the Java application&#x27;s configuration to point to the newly provisioned Azure Database for MySQL. Update the connection string, hostname, port, username, and password information accordingly.</p><p> * Enable <strong>monitoring and diagnostics</strong>: Utilize Azure Monitor to gain insights into the performance and health of your Java application and the underlying MySQL database. Set up metrics, alerts, and log analytics to proactively identify and resolve issues.</p><p> * Implement <strong>security</strong> measures: Apply security best practices to protect your Java application and the MySQL database. This includes implementing authentication and authorization mechanisms with passwordless connections and leveraging Microsoft Defender for Cloud for threat detection and vulnerability assessments.</p><p> * <strong>Backup</strong> your data: Azure Database for MySQL provides automated backups by default. You can configure the retention period for backups based on your requirements. You can also enable geo-redundant backups, if needed, to enhance data durability and availability.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="optional" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:3,&quot;severity&quot;:&quot;optional&quot;},&quot;azure-appservice&quot;:{&quot;effort&quot;:3,&quot;severity&quot;:&quot;optional&quot;},&quot;azure-container-apps&quot;:{&quot;effort&quot;:3,&quot;severity&quot;:&quot;optional&quot;}}' data-default-effort="3" data-default-severity="optional" data-rule="hardcoded-urls-00001" onclick="toggleRow('row-cloudreadiness-5', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-5">&#x276F;</button> Avoid using hardcoded URLs (HTTP protocol) in source code</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-optional"></span>Optional</span></td>
+      <td class="sp-cell">3</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-5" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/logic/msgsender/DingMsgSender.java">src/main/java/com/fangxuele/tool/push/logic/msgsender/DingMsgSender.java</span></td><td><span class="position">Line 232</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/logic/msgsender/DingMsgSender.java">src/main/java/com/fangxuele/tool/push/logic/msgsender/DingMsgSender.java</span></td><td><span class="position">Line 258</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/logic/msgsender/UpYunMsgSender.java">src/main/java/com/fangxuele/tool/push/logic/msgsender/UpYunMsgSender.java</span></td><td><span class="position">Line 32</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/UiConsts.java">src/main/java/com/fangxuele/tool/push/ui/UiConsts.java</span></td><td><span class="position">Line 93</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/UiConsts.java">src/main/java/com/fangxuele/tool/push/ui/UiConsts.java</span></td><td><span class="position">Line 98</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/UiConsts.java">src/main/java/com/fangxuele/tool/push/ui/UiConsts.java</span></td><td><span class="position">Line 103</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/UiConsts.java">src/main/java/com/fangxuele/tool/push/ui/UiConsts.java</span></td><td><span class="position">Line 108</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/UiConsts.java">src/main/java/com/fangxuele/tool/push/ui/UiConsts.java</span></td><td><span class="position">Line 110</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/component/TopMenuBar.java">src/main/java/com/fangxuele/tool/push/ui/component/TopMenuBar.java</span></td><td><span class="position">Line 226</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/component/TopMenuBar.java">src/main/java/com/fangxuele/tool/push/ui/component/TopMenuBar.java</span></td><td><span class="position">Line 266</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/AboutDialog.java">src/main/java/com/fangxuele/tool/push/ui/dialog/AboutDialog.java</span></td><td><span class="position">Line 98</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/AboutDialog.java">src/main/java/com/fangxuele/tool/push/ui/dialog/AboutDialog.java</span></td><td><span class="position">Line 134</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/AboutDialog.java">src/main/java/com/fangxuele/tool/push/ui/dialog/AboutDialog.java</span></td><td><span class="position">Line 214</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/NewTaskDialog.java">src/main/java/com/fangxuele/tool/push/ui/dialog/NewTaskDialog.java</span></td><td><span class="position">Line 160</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/NewTaskDialog.java">src/main/java/com/fangxuele/tool/push/ui/dialog/NewTaskDialog.java</span></td><td><span class="position">Line 215</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/NewTaskDialog.java">src/main/java/com/fangxuele/tool/push/ui/dialog/NewTaskDialog.java</span></td><td><span class="position">Line 979</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/form/account/WxMpAccountForm.java">src/main/java/com/fangxuele/tool/push/ui/form/account/WxMpAccountForm.java</span></td><td><span class="position">Line 295</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/UpdateDialog.java">src/main/java/com/fangxuele/tool/push/ui/dialog/UpdateDialog.java</span></td><td><span class="position">Line 84</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/UpdateInfoDialog.java">src/main/java/com/fangxuele/tool/push/ui/dialog/UpdateInfoDialog.java</span></td><td><span class="position">Line 84</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/importway/ImportByDing.java">src/main/java/com/fangxuele/tool/push/ui/dialog/importway/ImportByDing.java</span></td><td><span class="position">Line 94</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/importway/ImportByDing.java">src/main/java/com/fangxuele/tool/push/ui/dialog/importway/ImportByDing.java</span></td><td><span class="position">Line 162</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/importway/ImportByDing.java">src/main/java/com/fangxuele/tool/push/ui/dialog/importway/ImportByDing.java</span></td><td><span class="position">Line 289</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/importway/ImportByDing.java">src/main/java/com/fangxuele/tool/push/ui/dialog/importway/ImportByDing.java</span></td><td><span class="position">Line 462</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/dialog/importway/ImportByDing.java">src/main/java/com/fangxuele/tool/push/ui/dialog/importway/ImportByDing.java</span></td><td><span class="position">Line 540</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/form/AboutForm.java">src/main/java/com/fangxuele/tool/push/ui/form/AboutForm.java</span></td><td><span class="position">Line 123</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/form/msg/MailMsgForm.java">src/main/java/com/fangxuele/tool/push/ui/form/msg/MailMsgForm.java</span></td><td><span class="position">Line 72</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/form/msg/MailMsgForm.java">src/main/java/com/fangxuele/tool/push/ui/form/msg/MailMsgForm.java</span></td><td><span class="position">Line 242</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/form/msg/DingMsgForm.java">src/main/java/com/fangxuele/tool/push/ui/form/msg/DingMsgForm.java</span></td><td><span class="position">Line 103</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/listener/AboutListener.java">src/main/java/com/fangxuele/tool/push/ui/listener/AboutListener.java</span></td><td><span class="position">Line 45</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/listener/AboutListener.java">src/main/java/com/fangxuele/tool/push/ui/listener/AboutListener.java</span></td><td><span class="position">Line 81</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/fangxuele/tool/push/ui/listener/HelpListener.java">src/main/java/com/fangxuele/tool/push/ui/listener/HelpListener.java</span></td><td><span class="position">Line 28</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>This patterns verifies in source code and configuration files the presence of hardcoded URLs using the HTTP protocol (HTTP/HTTPS). This URL would need to be replaced by the new resource&#x27;s URL during the Cloud migration, if any change occured.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="optional" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:13,&quot;severity&quot;:&quot;optional&quot;},&quot;azure-appservice&quot;:{&quot;effort&quot;:13,&quot;severity&quot;:&quot;optional&quot;},&quot;azure-container-apps&quot;:{&quot;effort&quot;:13,&quot;severity&quot;:&quot;optional&quot;}}' data-default-effort="13" data-default-severity="optional" data-rule="quartz-scheduler-to-azure-functions-01000" onclick="toggleRow('row-cloudreadiness-6', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-6">&#x276F;</button> Quartz Scheduler usage detected</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-optional"></span>Optional</span></td>
+      <td class="sp-cell">13</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-6" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="pom.xml">pom.xml</span></td><td><span class="position">Line 306</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>The application uses Quartz Scheduler for scheduled jobs. Consider migrating scheduled workloads to Azure Functions using a Timer trigger.<br/>Azure Functions Timer Trigger supports NCRONTAB (cron-like) schedules and can replace many Quartz scheduling use cases while reducing infrastructure management overhead.<br/>You will need to replace Quartz jobs/triggers (and any persistent job store configuration) with timer-triggered Azure Functions, and move any state/persistence to external services (for example, Azure Storage, databases, or queues) as appropriate.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="optional" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:5,&quot;severity&quot;:&quot;optional&quot;},&quot;azure-appservice&quot;:{&quot;effort&quot;:5,&quot;severity&quot;:&quot;optional&quot;},&quot;azure-container-apps&quot;:{&quot;effort&quot;:5,&quot;severity&quot;:&quot;optional&quot;}}' data-default-effort="5" data-default-severity="optional" data-rule="sqlite-to-azure-postgresql-01000" onclick="toggleRow('row-cloudreadiness-7', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-7">&#x276F;</button> SQLite usage detected</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-optional"></span>Optional</span></td>
+      <td class="sp-cell">5</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-7" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="pom.xml">pom.xml</span></td><td><span class="position">Line 291</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>The application uses SQLite. Consider migrating to Azure Database for PostgreSQL.<br/>Azure Database for PostgreSQL provides a fully managed, multi-user PostgreSQL service with advanced SQL features and scalability beyond single-file databases.<br/>You will need to replace the SQLite JDBC driver and connection configuration, review SQL and schema differences (for example, data types, AUTOINCREMENT/sequence behavior, and concurrency/locking semantics), and perform schema/data migration from SQLite files to PostgreSQL.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<div class="issue-section" data-domain="java-upgrade">
+  <h2>Java Upgrade</h2>
+  <table class="issue-table">
+    <colgroup><col class="col-issue"/><col class="col-criticality"/><col class="col-storypoint"/></colgroup>
+    <thead><tr><th>Issue Category</th><th>Criticality</th><th>Story Point</th></tr></thead>
+    <tbody>
+    <tr class="issue-row" data-criticality="optional" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:8,&quot;severity&quot;:&quot;optional&quot;},&quot;azure-appservice&quot;:{&quot;effort&quot;:8,&quot;severity&quot;:&quot;optional&quot;},&quot;azure-container-apps&quot;:{&quot;effort&quot;:8,&quot;severity&quot;:&quot;optional&quot;}}' data-default-effort="8" data-default-severity="optional" data-rule="azure-java-version-02000" onclick="toggleRow('row-javaupgrade-0', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-javaupgrade-0">&#x276F;</button> Java Version is not the latest LTS</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-optional"></span>Optional</span></td>
+      <td class="sp-cell">8</td>
+    </tr>
+    <tr class="detail-row" id="row-javaupgrade-0" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="pom.xml">pom.xml</span></td><td><span class="position">Line 40</span></td></tr>
+            <tr><td><span class="file-path" title="pom.xml">pom.xml</span></td><td><span class="position"></span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>The application is not using the latest LTS Java version. It is recommended to consider upgrading to the latest LTS version to take advantage of the newest language features, performance improvements, and extended support timelines.<br/>Upgrading to the latest LTS version ensures your application benefits from the most recent security enhancements and a longer support lifecycle.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+</div><!-- #tab-issues -->
+<div id="tab-arch" class="tab-panel">
+  <div class="fact-content"><h1 id="architecture-diagram">Architecture Diagram</h1>
+<p>WePush is a desktop push notification tool built with Java Swing that enables batch message delivery across multiple messaging channels including WeChat, SMS, Email, DingTalk, and HTTP endpoints.</p>
+<h2 id="application-architecture">Application Architecture</h2>
+<div class="mermaid">
+flowchart TD
+    subgraph UI["UI Layer - Java Swing + FlatLaf 3.5.2"]
+        MainFrame["MainFrame / MainWindow"]
+        Forms["Forms: Message, Task, People, Account"]
+        Dialogs["Dialogs: Settings, About, Import"]
+    end
+    subgraph Logic["Business Logic Layer"]
+        PushControl["PushControl"]
+        MsgMaker["MsgMakerFactory + IMsgMaker"]
+        MsgSender["MsgSenderFactory + IMsgSender"]
+        MsgThread["MsgSendThread / MsgInfinitySendThread"]
+        TaskScheduler["Quartz Scheduler 2.3.2"]
+    end
+    subgraph Data["Data Access Layer"]
+        MyBatis["MyBatis 3.5.13"]
+        DAOs["DAOs: TTask, TMsg, TPeople, TAccount"]
+        DB1[("SQLite 3.43 (Local)")]
+        DB2[("MySQL 5.x (Optional)")]
+        HikariCP["HikariCP 3.4.5 Connection Pool"]
+    end
+    subgraph External["External Messaging Services"]
+        WxMP["WeChat MP API"]
+        WxMA["WeChat Mini Program API"]
+        WxCP["WeChat Enterprise API"]
+        Email["SMTP Email Service"]
+        SMS["SMS: AliYun / HwYun / TxYun / BdYun / YunPian"]
+        Ding["DingTalk Bot API"]
+        Http["Generic HTTP Endpoint"]
+        Qiniu["Qiniu / UpYun Storage"]
+    end
+
+    MainFrame --> Forms
+    Forms -->|"triggers"| PushControl
+    Forms -->|"CRUD"| DAOs
+    PushControl -->|"creates"| MsgMaker
+    PushControl -->|"creates"| MsgSender
+    PushControl -->|"spawns"| MsgThread
+    MsgThread -->|"sends via"| MsgSender
+    TaskScheduler -->|"schedules"| PushControl
+    DAOs -->|"SQL"| MyBatis
+    MyBatis --> HikariCP
+    HikariCP --> DB1
+    HikariCP --> DB2
+    MsgSender -->|"WeChat MP"| WxMP
+    MsgSender -->|"Mini Program"| WxMA
+    MsgSender -->|"Enterprise"| WxCP
+    MsgSender -->|"SMTP"| Email
+    MsgSender -->|"SMS API"| SMS
+    MsgSender -->|"Webhook"| Ding
+    MsgSender -->|"HTTP POST/GET"| Http
+    MsgSender -->|"Storage API"| Qiniu
+</div>
+<h3 id="technology-stack-summary">Technology Stack Summary</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Layer</th><th>Technology</th><th>Version</th><th>Purpose</th>
+</tr></thead><tbody>
+<tr><td>Presentation</td><td>Java Swing + FlatLaf</td><td>FlatLaf 3.5.2</td><td>Desktop GUI framework with modern look-and-feel</td></tr>
+<tr><td>Presentation</td><td>IntelliJ Forms Runtime</td><td>7.0.3</td><td>GUI form layout support</td></tr>
+<tr><td>Business Logic</td><td>Java</td><td>21</td><td>Core application logic and threading</td></tr>
+<tr><td>Business Logic</td><td>Quartz Scheduler</td><td>2.3.2</td><td>Scheduled and recurring push tasks</td></tr>
+<tr><td>Business Logic</td><td>weixin-java-mp</td><td>4.6.0</td><td>WeChat MP (Official Account) messaging SDK</td></tr>
+<tr><td>Business Logic</td><td>weixin-java-miniapp</td><td>4.6.0</td><td>WeChat Mini Program messaging SDK</td></tr>
+<tr><td>Business Logic</td><td>weixin-java-cp</td><td>4.6.0</td><td>WeChat Enterprise messaging SDK</td></tr>
+<tr><td>Business Logic</td><td>JavaMail (javax.mail)</td><td>1.6.2</td><td>Email delivery</td></tr>
+<tr><td>Business Logic</td><td>Aliyun Java SDK</td><td>4.4.2 / 1.1.0</td><td>Alibaba Cloud SMS</td></tr>
+<tr><td>Business Logic</td><td>Tencent Cloud SDK</td><td>3.1.847</td><td>Tencent Cloud SMS</td></tr>
+<tr><td>Business Logic</td><td>Huawei BCE SDK</td><td>0.10.134</td><td>Baidu Cloud SMS</td></tr>
+<tr><td>Business Logic</td><td>Hutool</td><td>5.6.4</td><td>General-purpose utility library</td></tr>
+<tr><td>Data Access</td><td>MyBatis</td><td>3.5.13</td><td>ORM / SQL mapping</td></tr>
+<tr><td>Data Access</td><td>HikariCP</td><td>3.4.5</td><td>JDBC connection pooling</td></tr>
+<tr><td>Data Storage</td><td>SQLite</td><td>3.43.0</td><td>Embedded local database</td></tr>
+<tr><td>Data Storage</td><td>MySQL</td><td>5.x (optional)</td><td>External relational database</td></tr>
+<tr><td>Serialization</td><td>Fastjson</td><td>1.2.74</td><td>JSON serialization</td></tr>
+<tr><td>Logging</td><td>Logback</td><td>1.2.3</td><td>Application logging</td></tr>
+</tbody></table></div>
+<h3 id="data-storage-external-services">Data Storage & External Services</h3>
+<p>WePush uses <strong>SQLite</strong> as its default embedded database (via MyBatis + HikariCP), storing tasks, messages, people lists, accounts, and import configurations locally without requiring external infrastructure. An optional <strong>MySQL</strong> connection is also supported for teams that prefer a shared relational database. External services are invoked at message-send time: <strong>WeChat Official Account</strong>, <strong>WeChat Mini Program</strong>, and <strong>WeChat Enterprise</strong> APIs are wrapped by the WeiXin Java SDK; <strong>Email</strong> is delivered via SMTP; multiple <strong>SMS cloud providers</strong> (Alibaba Cloud, Tencent Cloud, Huawei/Baidu Cloud, YunPian) are integrated via their respective Java SDKs; <strong>DingTalk</strong> robot webhooks, a generic <strong>HTTP endpoint</strong> channel, and <strong>cloud storage</strong> services (Qiniu, UpYun) are also supported.</p>
+<h3 id="key-architectural-decisions">Key Architectural Decisions</h3>
+<ul>
+<li><strong>Factory pattern for extensibility</strong>: <code>MsgMakerFactory</code> and <code>MsgSenderFactory</code> decouple channel selection from business logic, making it trivial to add new messaging channels.</li>
+<li><strong>Multi-threaded push execution</strong>: <code>MsgSendThread</code> and <code>MsgInfinitySendThread</code> run push jobs in background threads, keeping the Swing UI responsive during large batch sends.</li>
+<li><strong>MyBatis with XML mappers</strong>: Data access uses MyBatis XML mapper files under <code>src/main/resources/mapper/</code>, providing explicit SQL control over an embedded SQLite or optional MySQL database.</li>
+</ul>
+<h2 id="component-relationships">Component Relationships</h2>
+<div class="mermaid">
+flowchart LR
+    subgraph Presentation["Presentation Layer"]
+        MainWin["MainWindow"]
+        TaskForm["TaskForm"]
+        MsgForm["MessageManageForm"]
+        PeopleForm["PeopleEditForm"]
+        AccForm["AccountManageForm"]
+        Listeners["UI Listeners"]
+    end
+    subgraph Business["Business Logic"]
+        PushCtrl["PushControl"]
+        MsgMakerFact["MsgMakerFactory"]
+        MsgSenderFact["MsgSenderFactory"]
+        MsgMakers["IMsgMaker implementations"]
+        MsgSenders["IMsgSender implementations"]
+        MsgThreads["BaseMsgThread subclasses"]
+        TaskSched["TaskListener / Quartz"]
+        PushLogic["InfinityTaskRunThread"]
+    end
+    subgraph DataAccess["Data Access"]
+        TTaskMap["TTaskMapper"]
+        TMsgMap["TMsgMapper"]
+        TPeopleMap["TPeopleMapper"]
+        TAccMap["TAccountMapper"]
+        TTaskHisMap["TTaskHisMapper"]
+        TPeopleDataMap["TPeopleDataMapper"]
+    end
+    subgraph Infra["Infrastructure / Util"]
+        MybatisUtil["MybatisUtil"]
+        HikariUtil["HikariUtil"]
+        ConfigUtil["ConfigUtil"]
+        UpgradeUtil["UpgradeUtil"]
+        TemplateUtil["TemplateUtil"]
+    end
+
+    MainWin --> TaskForm
+    MainWin --> MsgForm
+    MainWin --> PeopleForm
+    MainWin --> AccForm
+    TaskForm -->|"triggers push"| PushCtrl
+    TaskForm -->|"CRUD"| TTaskMap
+    MsgForm -->|"CRUD"| TMsgMap
+    PeopleForm -->|"CRUD"| TPeopleMap
+    AccForm -->|"CRUD"| TAccMap
+    Listeners -->|"schedules"| TaskSched
+    TaskSched -->|"fires"| PushCtrl
+    PushCtrl -->|"builds message"| MsgMakerFact
+    MsgMakerFact -->|"creates"| MsgMakers
+    PushCtrl -->|"resolves sender"| MsgSenderFact
+    MsgSenderFact -->|"creates"| MsgSenders
+    PushCtrl -->|"spawns"| MsgThreads
+    MsgThreads -->|"uses"| MsgSenders
+    PushLogic -->|"delegates"| PushCtrl
+    TTaskMap -->|"via"| MybatisUtil
+    TMsgMap -->|"via"| MybatisUtil
+    TPeopleMap -->|"via"| MybatisUtil
+    TAccMap -->|"via"| MybatisUtil
+    MybatisUtil -->|"pool"| HikariUtil
+    ConfigUtil -.->|"config"| PushCtrl
+    ConfigUtil -.->|"config"| MybatisUtil
+    TemplateUtil -.->|"template render"| MsgMakers
+</div>
+<h3 id="component-inventory">Component Inventory</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Component</th><th>Layer</th><th>Type</th><th>Responsibility</th>
+</tr></thead><tbody>
+<tr><td>MainWindow</td><td>Presentation</td><td>Swing JPanel</td><td>Root window container, tab management</td></tr>
+<tr><td>TaskForm</td><td>Presentation</td><td>Swing Form</td><td>Push task configuration and execution trigger</td></tr>
+<tr><td>MessageManageForm</td><td>Presentation</td><td>Swing Form</td><td>Message template list and CRUD</td></tr>
+<tr><td>MessageEditForm</td><td>Presentation</td><td>Swing Form</td><td>Message content editing per message type</td></tr>
+<tr><td>PeopleEditForm</td><td>Presentation</td><td>Swing Form</td><td>Target audience management</td></tr>
+<tr><td>AccountManageForm</td><td>Presentation</td><td>Swing Form</td><td>Platform account (WeChat/SMS/Email) configuration</td></tr>
+<tr><td>MsgFormFactory</td><td>Presentation</td><td>Factory</td><td>Creates message-type-specific editing forms</td></tr>
+<tr><td>AccountFormFactory</td><td>Presentation</td><td>Factory</td><td>Creates account-type-specific configuration forms</td></tr>
+<tr><td>TaskListener</td><td>Business Logic</td><td>Event Listener</td><td>Handles UI task events and Quartz job scheduling</td></tr>
+<tr><td>PushControl</td><td>Business Logic</td><td>Controller</td><td>Orchestrates the complete push execution flow</td></tr>
+<tr><td>MsgMakerFactory</td><td>Business Logic</td><td>Factory</td><td>Instantiates the correct IMsgMaker for a message type</td></tr>
+<tr><td>IMsgMaker impls</td><td>Business Logic</td><td>Strategy</td><td>Constructs channel-specific message objects</td></tr>
+<tr><td>MsgSenderFactory</td><td>Business Logic</td><td>Factory</td><td>Instantiates the correct IMsgSender for a channel</td></tr>
+<tr><td>IMsgSender impls</td><td>Business Logic</td><td>Strategy</td><td>Delivers messages to external APIs</td></tr>
+<tr><td>BaseMsgThread</td><td>Business Logic</td><td>Thread</td><td>Base thread for batch message sending</td></tr>
+<tr><td>MsgSendThread</td><td>Business Logic</td><td>Thread</td><td>Single-run batch send thread</td></tr>
+<tr><td>MsgInfinitySendThread</td><td>Business Logic</td><td>Thread</td><td>Continuous/infinite send thread</td></tr>
+<tr><td>InfinityTaskRunThread</td><td>Business Logic</td><td>Thread</td><td>Manages infinite recurring task loops</td></tr>
+<tr><td>TTaskMapper</td><td>Data Access</td><td>MyBatis Mapper</td><td>CRUD for push tasks</td></tr>
+<tr><td>TMsgMapper</td><td>Data Access</td><td>MyBatis Mapper</td><td>CRUD for message templates</td></tr>
+<tr><td>TPeopleMapper</td><td>Data Access</td><td>MyBatis Mapper</td><td>CRUD for people/target lists</td></tr>
+<tr><td>TAccountMapper</td><td>Data Access</td><td>MyBatis Mapper</td><td>CRUD for platform accounts</td></tr>
+<tr><td>TTaskHisMapper</td><td>Data Access</td><td>MyBatis Mapper</td><td>Push task history records</td></tr>
+<tr><td>TPeopleDataMapper</td><td>Data Access</td><td>MyBatis Mapper</td><td>Individual target person data</td></tr>
+<tr><td>MybatisUtil</td><td>Infrastructure</td><td>Utility</td><td>MyBatis SqlSession factory management</td></tr>
+<tr><td>HikariUtil</td><td>Infrastructure</td><td>Utility</td><td>HikariCP connection pool setup</td></tr>
+<tr><td>ConfigUtil</td><td>Infrastructure</td><td>Utility</td><td>Application configuration loading/saving</td></tr>
+<tr><td>UpgradeUtil</td><td>Infrastructure</td><td>Utility</td><td>Database schema migration on version upgrade</td></tr>
+<tr><td>TemplateUtil</td><td>Infrastructure</td><td>Utility</td><td>Velocity template rendering for message variables</td></tr>
+</tbody></table></div></div>
+</div>
+<div id="tab-api" class="tab-panel">
+  <div class="fact-content"><h1 id="api-service-communication-contracts">API & Service Communication Contracts</h1>
+<p>WePush is a single-process desktop application with no inbound HTTP API surface; all communication is outbound-only, with the application acting as a client to external third-party messaging APIs and an optional SMTP server.</p>
+<h2 id="service-catalog">Service Catalog</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Port</th><th>Category</th><th>Purpose</th>
+</tr></thead><tbody>
+<tr><td>WePush Desktop App</td><td>N/A (desktop process)</td><td>Business</td><td>Single deployable unit; orchestrates all outbound push message delivery</td></tr>
+<tr><td>WeChat Official Account API</td><td>443 (HTTPS)</td><td>External</td><td>Receives template, kefu, subscribe, and uniform messages via WeiXin Java SDK</td></tr>
+<tr><td>WeChat Mini Program API</td><td>443 (HTTPS)</td><td>External</td><td>Receives subscribe messages via WeiXin Java SDK</td></tr>
+<tr><td>WeChat Enterprise (Work) API</td><td>443 (HTTPS)</td><td>External</td><td>Receives enterprise messages via WeiXin Java SDK</td></tr>
+<tr><td>SMTP Email Server</td><td>25 / 465 / 587 (configurable)</td><td>External</td><td>Receives outbound email via JavaMail / Hutool Mail</td></tr>
+<tr><td>Alibaba Cloud SMS API</td><td>443 (HTTPS)</td><td>External</td><td>Receives SMS dispatch requests via aliyun-java-sdk-dysmsapi</td></tr>
+<tr><td>Tencent Cloud SMS API</td><td>443 (HTTPS)</td><td>External</td><td>Receives SMS dispatch requests via tencentcloud-sdk-java</td></tr>
+<tr><td>Huawei / Baidu Cloud SMS API</td><td>443 (HTTPS)</td><td>External</td><td>Receives SMS dispatch requests via bce-java-sdk</td></tr>
+<tr><td>YunPian SMS API</td><td>443 (HTTPS)</td><td>External</td><td>Receives SMS dispatch requests via yunpian-java-sdk</td></tr>
+<tr><td>QCloud SMS API</td><td>443 (HTTPS)</td><td>External</td><td>Receives SMS dispatch requests via qcloudsms</td></tr>
+<tr><td>DingTalk Bot Webhook</td><td>443 (HTTPS)</td><td>External</td><td>Receives group bot messages via OkHttp POST</td></tr>
+<tr><td>Generic HTTP Endpoint</td><td>User-configured</td><td>External</td><td>Receives arbitrary HTTP GET/POST/PUT/PATCH/DELETE/HEAD requests</td></tr>
+<tr><td>Qiniu Cloud Storage</td><td>443 (HTTPS)</td><td>External</td><td>Receives file/object storage operations via qiniu-java-sdk</td></tr>
+<tr><td>UpYun Storage</td><td>443 (HTTPS)</td><td>External</td><td>Receives file/object storage operations via custom HTTP</td></tr>
+<tr><td>SQLite (embedded)</td><td>N/A (in-process)</td><td>Infrastructure</td><td>Local embedded database for all application data</td></tr>
+<tr><td>MySQL (optional)</td><td>3306 (configurable)</td><td>Infrastructure</td><td>Optional external relational database</td></tr>
+</tbody></table></div>
+<h2 id="api-endpoints-inventory">API Endpoints Inventory</h2>
+<p>WePush exposes <strong>no inbound HTTP API endpoints</strong>. It is a pure desktop client application. All outbound calls are delegated to the third-party SDK or OkHttp. The table below documents the <strong>outbound API contracts</strong> consumed by the application.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Channel</th><th>Outbound Method</th><th>API / Endpoint</th><th>Request Contract</th><th>Response Contract</th>
+</tr></thead><tbody>
+<tr><td>WeChat MP Template Message</td><td>SDK call</td><td><code>WxMpService.getTemplateMsgService().sendTemplateMsg()</code></td><td><code>WxMpTemplateMessage</code></td><td><code>WxMpTemplateMessageResult</code> (msgid)</td></tr>
+<tr><td>WeChat MP Kefu Message</td><td>SDK call</td><td><code>WxMpService.getKefuService().sendKefuMessage()</code></td><td><code>WxMpKefuMessage</code></td><td>success / exception</td></tr>
+<tr><td>WeChat MP Subscribe Message</td><td>SDK call</td><td><code>WxMpService.getMsgService().send()</code></td><td><code>WxMpSubscribeMessage</code></td><td>success / exception</td></tr>
+<tr><td>WeChat MP Uniform Message</td><td>SDK call</td><td><code>WxMpService.getUniformMessageService().sendUniformMsg()</code></td><td><code>WxMpUniformMessage</code></td><td>success / exception</td></tr>
+<tr><td>WeChat Mini Program Subscribe</td><td>SDK call</td><td><code>WxMaService.getMsgService().sendSubscribeMsg()</code></td><td><code>WxMaSubscribeMessage</code></td><td>success / exception</td></tr>
+<tr><td>WeChat Enterprise Message</td><td>SDK call</td><td><code>WxCpService.getMessageService().send()</code></td><td><code>WxCpMessage</code></td><td><code>WxCpMessageSendResult</code></td></tr>
+<tr><td>Email (SMTP)</td><td>SMTP</td><td>Configured SMTP host:port</td><td><code>MailMsg</code> (subject, body, to, cc, attachments)</td><td>success / exception</td></tr>
+<tr><td>Alibaba Cloud SMS</td><td>HTTPS REST</td><td><code>dysmsapi.aliyuncs.com/SendSms</code></td><td><code>SendSmsRequest</code> (phone, sign, template, params)</td><td><code>SendSmsResponse</code> (Code, Message)</td></tr>
+<tr><td>Tencent Cloud SMS</td><td>HTTPS REST</td><td>Tencent Cloud SMS endpoint</td><td><code>SendSmsRequest</code> (phones, templateId, params)</td><td><code>SendSmsResponse</code></td></tr>
+<tr><td>YunPian SMS</td><td>HTTPS REST</td><td><code>sms.yunpian.com/v2/sms/single_send.json</code></td><td><code>YunpianMsg</code> (mobile, text)</td><td>JSON response (code, msg)</td></tr>
+<tr><td>DingTalk Bot</td><td>HTTPS POST</td><td>Webhook URL (user-configured)</td><td>JSON body (msgtype, content) via OkHttp</td><td>JSON response</td></tr>
+<tr><td>Generic HTTP</td><td>HTTP (any method)</td><td>User-configured URL</td><td><code>HttpMsg</code> (URL, method, headers, params, body, cookies)</td><td><code>HttpSendResult</code> (body, headers, cookies)</td></tr>
+<tr><td>Qiniu Cloud Storage</td><td>HTTPS</td><td>Qiniu upload endpoint</td><td><code>Auth</code> + stream data</td><td>JSON response (key, hash)</td></tr>
+<tr><td>UpYun Storage</td><td>HTTPS REST</td><td>UpYun REST API</td><td>multipart form data</td><td>JSON response</td></tr>
+</tbody></table></div>
+<h2 id="management-observability-endpoints">Management & Observability Endpoints</h2>
+<p>WePush exposes no management or observability endpoints. It is a standalone desktop application with no embedded web server. Observability is limited to local log files produced by Logback.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Endpoint</th><th>Custom Metrics</th>
+</tr></thead><tbody>
+<tr><td>WePush Desktop App</td><td>None — no embedded HTTP server</td><td>Task execution counts, success/fail counts are shown in the UI console panel only; no metrics export</td></tr>
+</tbody></table></div>
+<h2 id="dtos-contracts">DTOs & Contracts</h2>
+<p>WePush uses plain Java beans (no immutable records or Lombok <code>@Value</code>) as data carriers between layers. Key contract classes are:</p>
+<ul>
+<li><strong><code>HttpMsg</code></strong> — Outbound HTTP message contract: URL, HTTP method, headers map, params map, body string, cookie list, body-type (MIME). Used by <code>HttpMsgMaker</code> → <code>HttpMsgSender</code>.</li>
+<li><strong><code>MailMsg</code></strong> — Email message contract: subject, content (HTML), to-list, CC-list, BCC-list, attachment paths. Used by <code>MailMsgMaker</code> → <code>MailMsgSender</code>.</li>
+<li><strong><code>SendResult</code></strong> — Generic send outcome: boolean success flag + info string. Returned by all <code>IMsgSender.send()</code> implementations.</li>
+<li><strong><code>HttpSendResult</code></strong> — Extended send outcome for HTTP channel: extends <code>SendResult</code> with response body, headers, and cookies strings.</li>
+<li><strong><code>TemplateData</code></strong> — Velocity template variable container: variable name → value mapping used for message template rendering.</li>
+<li><strong><code>UserCase</code></strong> — User-scenario/use-case bean for demo/template seeding.</li>
+<li><strong>Account config beans</strong> (<code>WxMpAccountConfig</code>, <code>EmailAccountConfig</code>, <code>HttpAccountConfig</code>, <code>AliYunAccountConfig</code>, etc.) — Deserialised from <code>TAccount.accountConfig</code> JSON column; carry channel-specific credentials and connection settings.</li>
+</ul>
+<p>No OpenAPI/Swagger specifications, protobuf schemas, or GraphQL schemas exist — the application has no inbound API surface to document in machine-readable format. JSON serialization for account config storage uses <strong>fastjson 1.2.74</strong> (<code>JSON.parseObject</code> / <code>JSON.toJSONString</code>).</p>
+<h2 id="communication-patterns">Communication Patterns</h2>
+<p><strong>Synchronous outbound calls</strong>: All message delivery is synchronous at the sender level. Each <code>IMsgSender.send()</code> implementation blocks the calling thread until the external API returns or times out. The HTTP channel uses OkHttp with a hard-coded 3-minute connect timeout (<code>connectTimeout(3, TimeUnit.MINUTES)</code>). WeChat and SMS SDK calls use their default timeouts (typically 10–30 s). No explicit read-timeout is set beyond the connect timeout for OkHttp.</p>
+<p><strong>Concurrency model</strong>: <code>PushControl</code> spawns one <code>MsgSendThread</code> per push run. Each thread iterates the recipient list and calls <code>IMsgSender.send()</code> sequentially within the thread. The number of parallel sender threads is bounded by <code>App.config.getMaxThreads()</code> (user-configured), which also governs the OkHttp <code>ConnectionPool</code> size.</p>
+<p><strong>Async send stub</strong>: <code>IMsgSender.asyncSend()</code> is defined in the interface and present on all implementations but returns <code>null</code> in every concrete class — asynchronous delivery is not implemented.</p>
+<p><strong>Resilience patterns</strong>: No circuit breaker, no retry policy, and no bulkhead pattern are implemented. A single call failure causes the individual recipient's send to be marked failed; the batch continues to the next recipient. There is no back-off or exponential retry.</p>
+<p><strong>Proxy support</strong>: The HTTP channel (<code>HttpMsgSender</code>) and WeChat MP SDK (<code>DefaultApacheHttpClientBuilder</code>) support optional HTTP proxy configuration stored in the account config.</p>
+<p><strong>Service discovery</strong>: Not applicable — WePush is a desktop application. External API URLs are either hard-coded in the SDKs or user-supplied at account configuration time.</p>
+<p><strong>Security posture</strong>: WePush makes all outbound calls over <strong>HTTPS</strong> (TLS) to cloud APIs. Credentials (AppId, AppSecret, API keys) are stored in the local SQLite database in the <code>TAccount.accountConfig</code> JSON column without encryption at rest. There is no inbound API surface, so authentication, authorization, and inbound TLS are not applicable. No token refresh, OAuth2 PKCE, or secret rotation mechanism is implemented.</p>
+<h2 id="service-technology-matrix">Service Technology Matrix</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Capability</th><th>WePush Desktop App</th>
+</tr></thead><tbody>
+<tr><td>GUI Framework</td><td>Java Swing + FlatLaf 3.5.2</td></tr>
+<tr><td>Data Access</td><td>MyBatis 3.5.13 (SQLite / MySQL)</td></tr>
+<tr><td>Outbound HTTP Client</td><td>OkHttp 4.9.1 + Hutool HTTP</td></tr>
+<tr><td>Messaging SDKs</td><td>weixin-java-* 4.6.0, aliyun/tencent/huawei/yunpian SDKs</td></tr>
+<tr><td>Scheduling</td><td>Quartz 2.3.2</td></tr>
+<tr><td>Service Discovery</td><td>None</td></tr>
+<tr><td>API Gateway</td><td>None</td></tr>
+<tr><td>Inbound Health Checks</td><td>None</td></tr>
+<tr><td>Caching</td><td>In-memory maps (OkHttpClient, WxMpService, MailAccount per accountId)</td></tr>
+<tr><td>Metrics Export</td><td>None</td></tr>
+<tr><td>Logging</td><td>Logback 1.2.3 (local file)</td></tr>
+</tbody></table></div>
+<h2 id="service-communication-sequence">Service Communication Sequence</h2>
+<div class="mermaid">
+sequenceDiagram
+    participant User as "User (Swing UI)"
+    participant TaskForm as "TaskForm"
+    participant PushCtrl as "PushControl"
+    participant MsgThread as "MsgSendThread"
+    participant MsgMaker as "IMsgMaker"
+    participant MsgSender as "IMsgSender"
+    participant DB as "SQLite / MySQL"
+    participant ExtAPI as "External Messaging API"
+
+    User->>TaskForm: Click Start Push
+    TaskForm->>PushCtrl: startPush(taskId, msgId, dryRun)
+    PushCtrl->>DB: load TTask, TMsg, TPeople recipients
+    DB-->>PushCtrl: task config + recipient list
+    PushCtrl->>MsgThread: spawn thread(recipientList, msgId)
+    loop For each recipient
+        MsgThread->>MsgMaker: makeMsg(recipientData)
+        MsgMaker-->>MsgThread: channel-specific message object
+        MsgThread->>MsgSender: send(msgData)
+        alt Dry Run
+            MsgSender-->>MsgThread: SendResult(success=true, dry)
+        else Live Send
+            MsgSender->>ExtAPI: HTTPS API call (WeChat/SMS/Email/HTTP/DingTalk)
+            alt Success
+                ExtAPI-->>MsgSender: 200 OK / msgid
+                MsgSender-->>MsgThread: SendResult(success=true)
+            else API Error
+                ExtAPI-->>MsgSender: error code / exception
+                MsgSender-->>MsgThread: SendResult(success=false, info=errorMsg)
+            end
+        end
+        MsgThread->>DB: save TTaskHis record (success/fail)
+    end
+    MsgThread-->>TaskForm: push completed signal
+    TaskForm-->>User: Update progress / console log
+</div></div>
+</div>
+<div id="tab-config" class="tab-panel">
+  <div class="fact-content"><h1 id="configuration-externalized-settings-inventory">Configuration & Externalized Settings Inventory</h1>
+<p>WePush uses a single Hutool <code>Setting</code> file (<code>config.setting</code>) stored in the user's home directory as its sole configuration source, with no Spring environment, application.properties, or externalized config server.</p>
+<h2 id="configuration-sources">Configuration Sources</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Source</th><th>Type</th><th>Path/Location</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td><code>config.setting</code></td><td>Hutool INI-style key-value file</td><td><code>~/.WePush5/config/config.setting</code></td><td>Primary runtime configuration; created on first launch; read/written at runtime via <code>ConfigUtil</code> / <code>ConfigBaseUtil</code></td></tr>
+<tr><td><code>mybatis-config.xml</code></td><td>MyBatis XML configuration</td><td><code>src/main/resources/mybatis-config.xml</code></td><td>ORM configuration; JDBC URL injected at runtime via <code>Properties</code> object in <code>MybatisUtil</code></td></tr>
+<tr><td><code>logback.xml</code></td><td>Logback XML configuration</td><td><code>src/main/resources/logback.xml</code></td><td>Logging configuration; log files written to <code>~/.WePush5/logs/</code></td></tr>
+<tr><td><code>pom.xml</code></td><td>Maven build descriptor</td><td><code>pom.xml</code></td><td>Dependency management, build plugins, and version properties</td></tr>
+<tr><td><code>db_init.sql</code></td><td>SQL schema init script</td><td><code>src/main/resources/db_init.sql</code></td><td>Executed once on first launch to create all SQLite tables</td></tr>
+<tr><td><code>TAccount.accountConfig</code> (runtime)</td><td>JSON blob in SQLite column</td><td><code>~/.WePush5/WePush.db</code> — <code>t_account.account_config</code></td><td>Per-channel account credentials stored as JSON; parsed at send time</td></tr>
+<tr><td><code>version_summary.json</code></td><td>JSON</td><td><code>src/main/resources/version_summary.json</code></td><td>Changelog / release notes displayed in-app</td></tr>
+<tr><td><code>.travis.yml</code></td><td>CI configuration</td><td><code>.travis.yml</code></td><td>Travis CI build definition (local JAR install + <code>mvn clean package</code>)</td></tr>
+</tbody></table></div>
+<p>No Spring Boot, Spring Cloud Config, Kubernetes ConfigMap, external secret store (Vault, KeyVault, AWS Secrets Manager), or <code>.env</code> file is used.</p>
+<h2 id="build-profiles">Build Profiles</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Profile</th><th>Activation</th><th>Purpose</th><th>Key Dependencies/Plugins</th>
+</tr></thead><tbody>
+<tr><td>Default (no profile)</td><td>Always active</td><td>Standard build producing executable JAR</td><td><code>javapackager</code> 1.7.5 (main class: <code>com.fangxuele.tool.push.App</code>), <code>maven-install-plugin</code> 2.5.2, <code>mybatis-generator-maven-plugin</code> 1.3.6</td></tr>
+<tr><td>Local JAR pre-install</td><td>Manual (<code>install_local_jar_to_repo.bat</code> / Travis <code>before_install</code>)</td><td>Installs vendored JARs (<code>antlr</code>, <code>chardet</code>, <code>cpdetector</code>, <code>jargs</code>, <code>taobao-sdk-java-auto</code>) into local Maven repository before build</td><td><code>mvn install:install-file</code> for 5 JARs under <code>./lib/</code> and <code>./src/main/lib/</code></td></tr>
+</tbody></table></div>
+<p>No Maven <code><profiles></code> blocks are declared in <code>pom.xml</code>. The only build variation is whether the local JARs have been pre-installed.</p>
+<h2 id="runtime-profiles">Runtime Profiles</h2>
+<p>WePush is a desktop application with no framework profile system (no Spring profiles, no <code>ASPNETCORE_ENVIRONMENT</code>). All runtime behaviour is driven by values in <code>config.setting</code>.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Profile</th><th>Activation Method</th><th>Config Files</th><th>Key Overrides</th>
+</tr></thead><tbody>
+<tr><td>Default (single profile)</td><td>Always active</td><td><code>~/.WePush5/config/config.setting</code></td><td>All settings read from this file; no environment-based switching</td></tr>
+</tbody></table></div>
+<p>The <code>MybatisUtil</code> class conditionally uses SQLite (always) or MySQL (when <code>setting.mysql.url</code> is non-empty) at startup, but this is controlled by a user-set property rather than a deployment profile.</p>
+<h2 id="properties-inventory">Properties Inventory</h2>
+<p>All properties are stored in Hutool <code>Setting</code> format: <code>group.key = value</code>. The file is at <code>~/.WePush5/config/config.setting</code>.</p>
+<p><strong>Section: <code>[msg]</code></strong></p>
+<div class="table-wrap"><table><thead><tr>
+<th>Property Key</th><th>Default</th><th>Type</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td><code>msg.msgType</code></td><td><code>13</code></td><td>int</td><td>Currently selected message type code</td></tr>
+<tr><td><code>msg.msgName</code></td><td><code>""</code></td><td>String</td><td>Currently selected message name</td></tr>
+</tbody></table></div>
+<p><strong>Section: <code>[member]</code></strong></p>
+<div class="table-wrap"><table><thead><tr>
+<th>Property Key</th><th>Default</th><th>Type</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td><code>member.sql</code></td><td><code>""</code></td><td>String</td><td>Custom SQL for importing recipients from MySQL</td></tr>
+</tbody></table></div>
+<p><strong>Section: <code>[push]</code></strong></p>
+<div class="table-wrap"><table><thead><tr>
+<th>Property Key</th><th>Default</th><th>Type</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td><code>push.dryRun</code></td><td><code>true</code></td><td>boolean</td><td>Whether push runs in dry-run (test) mode</td></tr>
+</tbody></table></div>
+<p><strong>Section: <code>[setting.normal]</code></strong></p>
+<div class="table-wrap"><table><thead><tr>
+<th>Property Key</th><th>Default</th><th>Type</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td><code>setting.normal.autoCheckUpdate</code></td><td><code>true</code></td><td>boolean</td><td>Auto-check for app updates on launch</td></tr>
+<tr><td><code>setting.normal.useTray</code></td><td><code>true</code></td><td>boolean</td><td>Show system tray icon</td></tr>
+<tr><td><code>setting.normal.closeToTray</code></td><td><code>true</code></td><td>boolean</td><td>Minimize to tray on window close</td></tr>
+<tr><td><code>setting.normal.defaultMaxWindow</code></td><td><code>true</code></td><td>boolean</td><td>Maximize window on launch</td></tr>
+<tr><td><code>setting.normal.unifiedBackground</code></td><td><code>true</code></td><td>boolean</td><td>Use unified background colour</td></tr>
+<tr><td><code>setting.normal.maxThreads</code></td><td><code>100</code></td><td>int</td><td>Maximum parallel push threads; also governs OkHttp connection pool size</td></tr>
+<tr><td><code>setting.normal.pushTotal</code></td><td><code>0</code></td><td>long</td><td>Cumulative push count counter</td></tr>
+<tr><td><code>setting.normal.beforeVersion</code></td><td><code>"v_0.0.0"</code></td><td>String</td><td>Last-seen version (used by upgrade logic)</td></tr>
+</tbody></table></div>
+<p><strong>Section: <code>[setting.mail]</code></strong> <em>(sensitive — see Secrets section)</em></p>
+<div class="table-wrap"><table><thead><tr>
+<th>Property Key</th><th>Default</th><th>Type</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td><code>setting.mail.mailHost</code></td><td><code>"smtp.163.com"</code></td><td>String</td><td>SMTP server hostname</td></tr>
+<tr><td><code>setting.mail.mailPort</code></td><td><code>"25"</code></td><td>String</td><td>SMTP server port</td></tr>
+<tr><td><code>setting.mail.mailFrom</code></td><td><code>""</code></td><td>String</td><td>Sender email address</td></tr>
+<tr><td><code>setting.mail.mailUser</code></td><td><code>""</code></td><td>String</td><td>SMTP authentication username</td></tr>
+<tr><td><code>setting.mail.mailPassword</code></td><td><code>""</code></td><td>String</td><td>SMTP password (plaintext)</td></tr>
+<tr><td><code>setting.mail.mailUseStartTLS</code></td><td><code>false</code></td><td>boolean</td><td>Enable STARTTLS</td></tr>
+<tr><td><code>setting.mail.mailUseSSL</code></td><td><code>false</code></td><td>boolean</td><td>Enable SSL/TLS</td></tr>
+</tbody></table></div>
+<p><strong>Section: <code>[setting.mysql]</code></strong> <em>(sensitive — see Secrets section)</em></p>
+<div class="table-wrap"><table><thead><tr>
+<th>Property Key</th><th>Default</th><th>Type</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td><code>setting.mysql.url</code></td><td><code>""</code></td><td>String</td><td>MySQL JDBC URL suffix (appended to <code>jdbc:mysql://</code>)</td></tr>
+<tr><td><code>setting.mysql.user</code></td><td><code>""</code></td><td>String</td><td>MySQL username</td></tr>
+<tr><td><code>setting.mysql.password</code></td><td><code>""</code></td><td>String</td><td>MySQL password (plaintext)</td></tr>
+</tbody></table></div>
+<p><strong>Section: <code>[setting.appearance]</code></strong></p>
+<div class="table-wrap"><table><thead><tr>
+<th>Property Key</th><th>Default (Windows/Mac/Linux)</th><th>Type</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td><code>setting.appearance.theme</code></td><td><code>"Flat macOS Dark"</code></td><td>String</td><td>FlatLaf theme name</td></tr>
+<tr><td><code>setting.appearance.font</code></td><td>OS-specific (<code>微软雅黑</code> / <code>PingFang SC</code> / <code>Noto Sans CJK HK</code>)</td><td>String</td><td>UI font family</td></tr>
+<tr><td><code>setting.appearance.fontSize</code></td><td><code>12</code></td><td>int</td><td>UI font size in points</td></tr>
+</tbody></table></div>
+<h2 id="startup-parameters-resource-requirements">Startup Parameters & Resource Requirements</h2>
+<p>WePush is launched as a standard Java desktop application. No containerisation, Kubernetes, or cloud deployment manifests exist.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>JVM/Runtime Options</th><th>Memory</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td>WePush Desktop App</td><td>No standard JVM flags defined in project; the <code>.travis.yml</code> build uses default JVM settings</td><td>Not specified</td><td>The <code>readme.md</code> mentions <code>-Xms64m -Xmx256m</code> as example launch parameters for macOS; no official JVM tuning file is committed</td></tr>
+<tr><td>Logback log files</td><td>N/A</td><td>N/A</td><td>Written to <code>~/.WePush5/logs/wechat-push.YYYY-MM-DD.log</code>; time-based rolling; no size limit configured</td></tr>
+</tbody></table></div>
+<p>The <code>App.java</code> macOS launch comment shows: <code>-Xms64m -Xmx256m -Dapple.awt.application.name="WePush"</code> as example flags, but these are not enforced by the project build.</p>
+<h2 id="startup-dependency-chain">Startup Dependency Chain</h2>
+<p>WePush is a single-process desktop application with no inter-service dependencies. The startup sequence within the process is:</p>
+<ol>
+<li><strong>Theme initialisation</strong> (<code>Init.initTheme()</code>) — FlatLaf theme applied before any UI is shown</li>
+<li><strong>MainFrame creation and display</strong> — Splash/loading panel shown immediately</li>
+<li><strong><code>MybatisUtil</code> static initialiser</strong> — SQLite file checked; if absent, <code>db_init.sql</code> is executed to create tables; MyBatis <code>SqlSessionFactory</code> built</li>
+<li><strong><code>ConfigUtil</code> initialiser</strong> — <code>config.setting</code> file loaded (created if absent)</li>
+<li><strong><code>UpgradeUtil.smoothUpgrade()</code></strong> — Version-based schema migration DDL executed</li>
+<li><strong><code>MainWindow</code> and tab initialisation</strong> — UI fully rendered</li>
+<li><strong>Scheduled task reload</strong> (<code>TaskListener.addAllScheduledTask()</code>) — All persisted Quartz jobs re-submitted to the scheduler (runs in background thread)</li>
+</ol>
+<p>No readiness probes, health checks, Docker Compose <code>depends_on</code>, or <code>dockerize</code> wait mechanisms are used.</p>
+<h2 id="secrets-sensitive-configuration">Secrets & Sensitive Configuration</h2>
+<p>All secrets are stored <strong>unencrypted</strong> in the local <code>config.setting</code> file or in the SQLite <code>t_account.account_config</code> JSON column.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Secret Reference</th><th>Type</th><th>Storage</th>
+</tr></thead><tbody>
+<tr><td><code>setting.mail.mailPassword</code></td><td>SMTP password</td><td>Plaintext in <code>~/.WePush5/config/config.setting</code></td></tr>
+<tr><td><code>setting.mysql.password</code></td><td>MySQL password</td><td>Plaintext in <code>~/.WePush5/config/config.setting</code></td></tr>
+<tr><td><code>t_account.account_config</code> → AppId/AppSecret</td><td>WeChat MP/MA/CP credentials</td><td>Plaintext JSON in SQLite <code>~/.WePush5/WePush.db</code></td></tr>
+<tr><td><code>t_account.account_config</code> → API keys</td><td>Alibaba/Tencent/Huawei/Qiniu/YunPian keys</td><td>Plaintext JSON in SQLite <code>~/.WePush5/WePush.db</code></td></tr>
+<tr><td><code>t_account.account_config</code> → webhookUrl</td><td>DingTalk bot webhook URL (contains secret token)</td><td>Plaintext JSON in SQLite <code>~/.WePush5/WePush.db</code></td></tr>
+</tbody></table></div>
+<h3 id="secrets-provisioning-workflow">Secrets Provisioning Workflow</h3>
+<p>WePush has no automated secrets provisioning workflow. Secrets are entered manually by the user via the Settings dialog and Account Management forms within the desktop application, then persisted immediately to the local SQLite database or <code>config.setting</code> file. There is no secrets rotation, no encryption at rest, no integration with HashiCorp Vault, Azure KeyVault, or AWS Secrets Manager, and no environment-variable injection mechanism. The security boundary is the operating-system file-permission model on the user's local machine.</p>
+<h2 id="feature-flags">Feature Flags</h2>
+<p>WePush does not use a dedicated feature-flag framework (no LaunchDarkly, Unleash, Spring Feature Flags, or <code>.NET FeatureManagement</code>). The following settings act as informal feature toggles:</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Flag Name</th><th>Default</th><th>Controlled By</th><th>Behaviour</th>
+</tr></thead><tbody>
+<tr><td><code>push.dryRun</code></td><td><code>true</code></td><td><code>config.setting</code> + UI checkbox</td><td>When <code>true</code>, send logic executes but no actual API call is made; results logged as successful</td></tr>
+<tr><td><code>setting.normal.autoCheckUpdate</code></td><td><code>true</code></td><td><code>config.setting</code> + Settings dialog</td><td>Enables automatic version-check HTTP request on application startup</td></tr>
+<tr><td><code>setting.normal.useTray</code></td><td><code>true</code></td><td><code>config.setting</code> + Settings dialog</td><td>Enables system tray icon and tray-based minimise</td></tr>
+<tr><td><code>setting.normal.closeToTray</code></td><td><code>true</code></td><td><code>config.setting</code> + Settings dialog</td><td>Minimises to tray instead of exiting when window is closed</td></tr>
+<tr><td><code>setting.normal.unifiedBackground</code></td><td><code>true</code></td><td><code>config.setting</code> + Settings dialog</td><td>Applies a unified background colour to the main window</td></tr>
+</tbody></table></div>
+<h2 id="framework-runtime-versions">Framework & Runtime Versions</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Component</th><th>Version</th><th>Source</th>
+</tr></thead><tbody>
+<tr><td>Java (target)</td><td>21</td><td><code>pom.xml</code> <code><java.version>21</java.version></code></td></tr>
+<tr><td>Java (Travis CI build)</td><td>OpenJDK 8</td><td><code>.travis.yml</code> <code>jdk: openjdk8</code> (outdated — mismatches pom.xml target)</td></tr>
+<tr><td>Maven (build tool)</td><td>Not pinned (system Maven)</td><td><code>.travis.yml</code> — no <code>mvn wrapper</code> or <code><maven.version></code> enforced</td></tr>
+<tr><td>MyBatis</td><td>3.5.13</td><td><code>pom.xml</code></td></tr>
+<tr><td>FlatLaf (UI)</td><td>3.5.2</td><td><code>pom.xml</code></td></tr>
+<tr><td>Quartz Scheduler</td><td>2.3.2</td><td><code>pom.xml</code></td></tr>
+<tr><td>WeiXin Java SDK (MP/MA/CP)</td><td>4.6.0</td><td><code>pom.xml</code></td></tr>
+<tr><td>Hutool</td><td>5.6.4</td><td><code>pom.xml</code></td></tr>
+<tr><td>Logback</td><td>1.2.3</td><td><code>pom.xml</code></td></tr>
+<tr><td>OkHttp</td><td>4.9.1</td><td><code>pom.xml</code></td></tr>
+<tr><td>Fastjson</td><td>1.2.74</td><td><code>pom.xml</code></td></tr>
+<tr><td>Lombok</td><td>1.18.30</td><td><code>pom.xml</code></td></tr>
+<tr><td>SQLite JDBC</td><td>3.43.0.0</td><td><code>pom.xml</code></td></tr>
+<tr><td>MySQL Connector/J</td><td>5.1.47</td><td><code>pom.xml</code></td></tr>
+<tr><td>javapackager Maven plugin</td><td>1.7.5</td><td><code>pom.xml</code></td></tr>
+<tr><td>mybatis-generator-maven-plugin</td><td>1.3.6</td><td><code>pom.xml</code></td></tr>
+<tr><td>Velocity Engine</td><td>2.3</td><td><code>pom.xml</code></td></tr>
+<tr><td>Apache POI (OOXML)</td><td>4.1.2</td><td><code>pom.xml</code></td></tr>
+</tbody></table></div></div>
+</div>
+<div id="tab-workflows" class="tab-panel">
+  <div class="fact-content"><h1 id="core-business-workflows">Core Business Workflows</h1>
+<p>WePush is a desktop batch push-notification tool that allows users to compose messages, manage recipient lists, and deliver them at scale across 19 different messaging channels including WeChat, SMS, Email, DingTalk, and HTTP endpoints.</p>
+<h2 id="domain-entities">Domain Entities</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Entity</th><th>Service / Bounded Context</th><th>Description</th><th>Key Relationships</th>
+</tr></thead><tbody>
+<tr><td>TTask</td><td>Task Management</td><td>A named push job that combines a message template, a recipient group, an account, and execution settings</td><td>References TMsg, TAccount, and TPeople; owns many TTaskHis records</td></tr>
+<tr><td>TTaskHis</td><td>Task Execution History</td><td>A single execution run of a task, capturing start/end times, success/fail counts, status, and result file paths</td><td>Belongs to one TTask</td></tr>
+<tr><td>TMsg</td><td>Message Management</td><td>A reusable message template for a specific channel type; the <code>content</code> field is channel-specific JSON</td><td>Belongs to one TAccount; linked from TTask</td></tr>
+<tr><td>TAccount</td><td>Account Management</td><td>Platform credentials and connection settings for one push channel (WeChat, SMS provider, SMTP, etc.)</td><td>Owns many TMsg records and TPeople records</td></tr>
+<tr><td>TPeople</td><td>Recipient Group Management</td><td>A named group of push targets associated with a channel and account</td><td>Owns many TPeopleData records; has one TPeopleImportConfig</td></tr>
+<tr><td>TPeopleData</td><td>Recipient Management</td><td>A single push target (openId, phone number, or identifier) plus template variable data</td><td>Belongs to one TPeople group</td></tr>
+<tr><td>TPeopleImportConfig</td><td>Import Configuration</td><td>Stores the last-used import method and its parameters for a recipient group, enabling scheduled re-import</td><td>Belongs to one TPeople group</td></tr>
+<tr><td>TWxMpUser</td><td>WeChat Follower Cache</td><td>Cached WeChat Official Account follower profile data pulled from WeChat API during import</td><td>Used during BY_WX_MP import; cleared and repopulated on each import</td></tr>
+</tbody></table></div>
+<h2 id="service-to-domain-mapping">Service-to-Domain Mapping</h2>
+<p>WePush is a single-service desktop application; all bounded contexts exist within one process.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Bounded Context</th><th>Domain Entities Owned</th><th>External Dependencies</th>
+</tr></thead><tbody>
+<tr><td>Task Management</td><td>TTask, TTaskHis</td><td>None — purely local</td></tr>
+<tr><td>Message Management</td><td>TMsg (+ channel-specific DTOs: MailMsg, HttpMsg)</td><td>External messaging APIs at send time</td></tr>
+<tr><td>Account Management</td><td>TAccount (+ channel config beans)</td><td>External API credentials stored locally</td></tr>
+<tr><td>Recipient Group Management</td><td>TPeople, TPeopleData, TPeopleImportConfig</td><td>File system (CSV/TXT/XLS), MySQL (optional), WeChat MP API, WeChat Enterprise API, DingTalk API</td></tr>
+<tr><td>Push Execution Engine</td><td>TaskRunThread, MsgSendThread, IMsgSender implementations</td><td>All configured external messaging APIs</td></tr>
+</tbody></table></div>
+<h2 id="primary-workflows">Primary Workflows</h2>
+<h3 id="workflow-1-batch-push-execution-one-time-task">Workflow 1: Batch Push Execution (One-time Task)</h3>
+<p>The primary business workflow — user selects a saved task and triggers an immediate push to all recipients in the linked people group.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li><strong>Task selection</strong>: User selects a task from the task list in the UI.</li>
+<li><strong>Dry-run decision</strong>: User chooses dry-run (simulate) or live send. The task's <code>dryRun</code> setting is passed to <code>TaskRunThread</code>.</li>
+<li><strong>Recipient list preparation</strong>: <code>TaskRunThread.preparePushRun()</code> loads all <code>TPeopleData</code> records for the task's <code>peopleId</code>. If the task is scheduled (<code>taskPeriod = SCHEDULE_TASK</code>) and <code>reimportPeople = 1</code>, the last import method is re-run first to refresh the recipient list.</li>
+<li><strong>Task history record created</strong>: A <code>TTaskHis</code> row is inserted with status <code>INIT</code>, capturing start time and total recipient count.</li>
+<li><strong>Recipient sharding</strong>: The full recipient list is divided into equal slices; one <code>MsgSendThread</code> is created per slice, up to <code>tTask.threadCnt</code> threads. Threads run as Java virtual threads.</li>
+<li><strong>Per-recipient send loop</strong>: Each <code>MsgSendThread</code> iterates its slice. For each recipient:</li>
+</ol>
+<ul>
+<li>If <strong>interval push</strong> is enabled, the thread sleeps <code>intervalTime</code> seconds before each send.</li>
+<li><code>IMsgSender.send(msgData)</code> is called (live) or returns a mock success (dry-run).</li>
+<li>On success: recipient added to <code>sendSuccessList</code>, <code>successRecords</code> counter incremented.</li>
+<li>On failure: recipient added to <code>sendFailList</code>, <code>failRecords</code> counter incremented; error logged to task log file.</li>
+<li>For HTTP channel with <code>saveResult = 1</code>: response body is appended to the recipient's data row.</li>
+</ul>
+<ol>
+<li><strong>Completion</strong>: When all threads finish, <code>TTaskHis</code> is updated with end time, success count, fail count, and status <code>FINISH</code>. UI task-history table is refreshed.</li>
+<li><strong>Result export (optional)</strong>: Success and failure lists are written to CSV files; paths stored in <code>TTaskHis</code>.</li>
+<li><strong>Alert email (optional)</strong>: If <code>resultAlert = 1</code> and <code>alertEmails</code> are configured, a summary email is sent.</li>
+</ol>
+<h3 id="workflow-2-scheduled-periodic-push-task">Workflow 2: Scheduled / Periodic Push Task</h3>
+<p>Tasks can be scheduled using a cron expression or a fixed period; the Hutool <code>Scheduler</code> (Cron) executes them automatically.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li><strong>On application startup</strong>: <code>TaskListener.addAllScheduledTask()</code> queries all tasks with a schedule and registers them with the Hutool <code>Scheduler</code>.</li>
+<li><strong>At scheduled time</strong>: The scheduler fires a <code>Task</code> that creates a new <code>TaskRunThread</code> (or <code>InfinityTaskRunThread</code> for <code>INFINITY_TASK</code> mode) and starts it.</li>
+<li><strong>Re-import decision</strong>: If <code>reimportPeople = 1</code>, the people group is re-imported from the last configured source before sending starts (same logic as Workflow 1, step 3).</li>
+<li><strong>Execution</strong>: Identical to Workflow 1, steps 4–9.</li>
+</ol>
+<h3 id="workflow-3-recipient-import">Workflow 3: Recipient Import</h3>
+<p>Before a task can run, the target audience must be imported into a <code>TPeople</code> group.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li><strong>Import method selection</strong>: User selects one of six import methods:</li>
+</ol>
+<ul>
+<li><strong>By File</strong>: CSV, TXT (delimiter-separated), or XLS/XLSX file parsed row-by-row.</li>
+<li><strong>By SQL</strong>: Raw SQL query executed against the user-configured MySQL instance; each result row becomes a recipient.</li>
+<li><strong>By Number</strong>: Generate a numeric sequence of recipient identifiers.</li>
+<li><strong>By WeChat MP</strong>: WeChat MP API called to fetch all follower <code>openId</code> values; stored in <code>TWxMpUser</code> cache then bulk-inserted into <code>TPeopleData</code>.</li>
+<li><strong>By WeChat Enterprise</strong>: WeChat Enterprise API called to fetch department member lists.</li>
+<li><strong>By DingTalk</strong>: DingTalk API called to fetch organization member lists.</li>
+</ul>
+<ol>
+<li><strong>Data parsing and variable extraction</strong>: Each row is parsed into a <code>pin</code> (primary identifier) and a <code>varData</code> JSON array of template variable values.</li>
+<li><strong>Persistence</strong>: All <code>TPeopleData</code> records for the group are deleted, then re-inserted (full replacement). The import method and its parameters are saved to <code>TPeopleImportConfig</code> for future re-import.</li>
+</ol>
+<h3 id="workflow-4-message-preview-test-send">Workflow 4: Message Preview / Test Send</h3>
+<p>Before running a full task, a user can preview-send to a small set of target identifiers.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>User enters semicolon-separated target identifiers in the preview field of <code>MessageEditForm</code>.</li>
+<li><code>PushControl.preview(tMsgId)</code> creates an <code>IMsgSender</code> with <code>dryRun = 0</code> (live send).</li>
+<li>Each identifier is sent immediately, and <code>SendResult</code> objects are collected and displayed.</li>
+</ol>
+<h3 id="workflow-5-infinity-task-variable-rate-push">Workflow 5: Infinity Task (Variable-Rate Push)</h3>
+<p>An alternative execution mode where messages are sent in an open-ended loop rather than to a fixed recipient list.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>Task is configured with <code>taskMode = INFINITY_TASK</code>.</li>
+<li><code>InfinityTaskRunThread</code> runs inside <code>InfinityTaskHisDetailDialog</code>, continuously executing sends.</li>
+<li><code>MsgInfinitySendThread</code> sends one message per loop iteration at a configurable interval.</li>
+<li>The loop continues until the user explicitly stops the task.</li>
+</ol>
+<h2 id="cross-service-data-flows">Cross-Service Data Flows</h2>
+<p>WePush is a single-process application; there are no network-level cross-service data flows. Data composition occurs within the process:</p>
+<ul>
+<li><strong>Recipient data composition at send time</strong>: When <code>TaskRunThread.preparePushRun()</code> loads recipients, it reads <code>varData</code> from <code>TPeopleData</code> as a JSON string array. At send time, <code>IMsgMaker.makeMsg(String[] msgData)</code> uses Velocity templates stored in <code>TMsg.content</code> to render the final message, substituting <code>$var1</code>, <code>$var2</code>, … with the recipient's variable values.</li>
+<li><strong>Account credential injection</strong>: <code>IMsgSender</code> constructors load the linked <code>TAccount.accountConfig</code> JSON and deserialise it into a channel-specific config bean (e.g., <code>WxMpAccountConfig</code>, <code>HttpAccountConfig</code>). Credentials are thus composed at instantiation time, not at send time.</li>
+<li><strong>Result aggregation for reporting</strong>: <code>TaskRunThread</code> accumulates <code>sendSuccessList</code> and <code>sendFailList</code> across all parallel <code>MsgSendThread</code> instances using thread-safe <code>LongAdder</code> counters and <code>CopyOnWriteArrayList</code>, then writes them to CSV result files whose paths are stored on <code>TTaskHis</code>.</li>
+</ul>
+<h2 id="business-workflow-sequence">Business Workflow Sequence</h2>
+<div class="mermaid">
+sequenceDiagram
+    participant User as "User (Desktop UI)"
+    participant TaskForm as "Task Management UI"
+    participant TaskRT as "TaskRunThread"
+    participant ImportSvc as "Import Service"
+    participant MsgThread as "MsgSendThread (x N)"
+    participant MsgSender as "IMsgSender"
+    participant DB as "SQLite Database"
+    participant ExtAPI as "External Messaging API"
+
+    User->>TaskForm: Select task and click Start
+    TaskForm->>TaskRT: new TaskRunThread(taskId, dryRun)
+    TaskRT->>DB: Load TTask configuration
+    DB-->>TaskRT: TTask (msgId, peopleId, threadCnt, reimportPeople...)
+
+    alt Scheduled task with reimportPeople=1
+        TaskRT->>ImportSvc: Re-import recipients (last method)
+        ImportSvc->>DB: Delete existing TPeopleData
+        ImportSvc->>ExtAPI: Fetch recipients (WeChat/DingTalk API or file/SQL)
+        ExtAPI-->>ImportSvc: Recipient list
+        ImportSvc->>DB: Insert refreshed TPeopleData
+    end
+
+    TaskRT->>DB: Load all TPeopleData for peopleId
+    DB-->>TaskRT: Recipient list with varData
+    TaskRT->>DB: Insert TTaskHis (status=INIT, totalCnt=N)
+
+    TaskRT->>TaskRT: Shard recipients into threadCnt slices
+    loop For each shard (virtual thread)
+        TaskRT->>MsgThread: Start MsgSendThread(shard)
+    end
+
+    loop For each recipient in shard
+        alt Interval push enabled
+            MsgThread->>MsgThread: Sleep intervalTime seconds
+        end
+        MsgThread->>MsgSender: send(recipientData)
+        alt Dry Run mode
+            MsgSender-->>MsgThread: SendResult(success=true, simulated)
+        else Live Send
+            MsgSender->>ExtAPI: Channel API call (WeChat / SMS / Email / HTTP / DingTalk)
+            alt API success
+                ExtAPI-->>MsgSender: 200 OK / msgid
+                MsgSender-->>MsgThread: SendResult(success=true)
+                MsgThread->>MsgThread: Add to sendSuccessList
+            else API failure
+                ExtAPI-->>MsgSender: Error response / exception
+                MsgSender-->>MsgThread: SendResult(success=false, info=error)
+                MsgThread->>MsgThread: Add to sendFailList, log error
+            end
+        end
+    end
+
+    MsgThread-->>TaskRT: Thread finished signal
+    TaskRT->>DB: Update TTaskHis (status=FINISH, successCnt, failCnt, endTime)
+    TaskRT->>TaskForm: Refresh task history table
+    TaskForm-->>User: Show completion summary
+</div>
+<h2 id="business-rules-decision-logic">Business Rules & Decision Logic</h2>
+<p><strong>Validation Rules:</strong></p>
+<ul>
+<li>A task must have a valid <code>messageId</code>, <code>peopleId</code>, and <code>accountId</code> before it can be executed (referenced entities must exist in SQLite).</li>
+<li>Task selection validation: user must select a row in the task list before clicking Start, Modify, or Stop — otherwise a warning dialog is shown.</li>
+<li>Dry-run mode (<code>dryRun = 1</code>) allows full workflow execution including recipient loading and message construction, but bypasses the actual API call; all sends are recorded as successful.</li>
+</ul>
+<p><strong>State Transitions (<code>TTaskHis.status</code>):</strong></p>
+<ul>
+<li><code>INIT (0)</code> → <code>RUNNING (1)</code> → <code>FINISH (2)</code> / <code>STOP (3)</code> / <code>FAIL (4)</code></li>
+<li>Status is persisted to <code>TTaskHis</code> at each transition; the UI task-history table is updated in real time.</li>
+</ul>
+<p><strong>Message Type Decision (<code>MessageTypeEnum</code>):</strong></p>
+<ul>
+<li>19 distinct message types are supported (codes 1–20, skipping 6). The <code>MsgSenderFactory</code> selects the concrete <code>IMsgSender</code> implementation via a switch on the message type code.</li>
+<li><code>MessageTypeEnum.isWxMpType()</code>, <code>isWxMaType()</code>, and <code>isWxMaOrMpType()</code> helper methods determine which WeChat SDK to initialise.</li>
+</ul>
+<p><strong>Task Mode Decision (<code>TaskModeEnum</code>):</strong></p>
+<ul>
+<li><code>FIX_THREAD_TASK (1)</code>: Fixed thread-pool mode. Recipient list is fully loaded, sharded, and sent in parallel by <code>threadCnt</code> virtual threads.</li>
+<li><code>INFINITY_TASK (2)</code>: Open-ended mode. <code>InfinityTaskRunThread</code> and <code>MsgInfinitySendThread</code> loop continuously at a configurable interval until explicitly stopped.</li>
+</ul>
+<p><strong>Recipient Import Strategy (<code>PeopleImportWayEnum</code>):</strong></p>
+<ul>
+<li>Six import methods (file, SQL, number-sequence, WeChat MP API, WeChat Enterprise API, DingTalk API).</li>
+<li>For scheduled tasks with <code>reimportPeople = 1</code>, the last-used import method (stored in <code>TPeopleImportConfig</code>) is automatically re-run to refresh the recipient list before each execution.</li>
+<li>Full replacement strategy: existing <code>TPeopleData</code> for the group is always deleted before inserting fresh records.</li>
+</ul>
+<p><strong>Thread Safety & Concurrency:</strong></p>
+<ul>
+<li><code>successRecords</code> and <code>failRecords</code> counters use <code>LongAdder</code> for lock-free concurrent increments.</li>
+<li><code>finishedThreadCount</code> uses <code>AtomicInteger</code>.</li>
+<li><code>sendSuccessList</code> and <code>sendFailList</code> should be thread-safe lists (expected to be <code>Collections.synchronizedList</code> or <code>CopyOnWriteArrayList</code>).</li>
+<li>The <code>running</code> flag is <code>volatile boolean</code>, allowing coordinated stop across threads.</li>
+<li>The <code>okHttpClientMap</code> and <code>mailAccountMap</code> caches in senders are unsynchronised <code>HashMap</code>s — a potential race condition under concurrent task execution.</li>
+</ul>
+<p><strong>Error Handling:</strong></p>
+<ul>
+<li>Individual send failures do not abort the batch; the loop continues to the next recipient.</li>
+<li>Send errors are logged to a per-task log file (path stored on <code>TTaskHis.logFilePath</code>) and appended to <code>sendFailList</code>.</li>
+<li>No retry mechanism is implemented. A failed recipient is counted once and moved on.</li>
+<li>On application error during task setup, the <code>TTaskHis</code> status may remain <code>INIT</code> rather than transitioning to <code>FAIL</code> — no compensating transaction is performed.</li>
+</ul>
+<p><strong>Audit / Logging:</strong></p>
+<ul>
+<li>Every push run creates a <code>TTaskHis</code> record with start time, end time, total/success/fail counts, status, and paths to result CSV files.</li>
+<li>A per-task <code>.log</code> file is written to <code>~/.WePush5/data/push_log/</code> containing per-recipient send events.</li>
+<li>Global application logs are written by Logback to <code>~/.WePush5/logs/wechat-push.YYYY-MM-DD.log</code>.</li>
+</ul>
+<p><strong>Authorization:</strong></p>
+<ul>
+<li>No authentication or authorization is implemented. Any user with access to the local machine can use the application. API credentials are stored locally and provide implicit authorization to the external messaging platforms.</li>
+</ul></div>
+</div>
+<div id="tab-deps" class="tab-panel">
+  <div class="fact-content"><h1 id="dependency-map">Dependency Map</h1>
+<p>WePush is a Java 21 desktop push-notification tool with approximately 35 declared external dependencies spanning messaging SDKs, GUI frameworks, data access, scheduling, and utilities.</p>
+<h2 id="dependencies">Dependencies</h2>
+<div class="mermaid">
+flowchart LR
+    App["WePush v5.0.5"]
+
+    subgraph Messaging["Messaging / Push SDKs"]
+        WxMP["weixin-java-mp v4.6.0"]
+        WxMA["weixin-java-miniapp v4.6.0"]
+        WxCP["weixin-java-cp v4.6.0"]
+        JavaMail["javax.mail v1.6.2"]
+        QCloud["qcloudsms v1.0.6"]
+        YunPian["yunpian-java-sdk v1.2.7"]
+        TxCloud["tencentcloud-sdk-java v3.1.847"]
+    end
+    subgraph CloudSDK["Cloud Provider SDKs"]
+        AliCore["aliyun-java-sdk-core v4.4.2"]
+        AliSMS["aliyun-java-sdk-dysmsapi v1.1.0"]
+        BdCloud["bce-java-sdk v0.10.134"]
+        Qiniu["qiniu-java-sdk v7.3.0"]
+    end
+    subgraph DB["Database / ORM"]
+        MyBatis["mybatis v3.5.13"]
+        SQLite["sqlite-jdbc v3.43.0"]
+        MySQL["mysql-connector-java v5.1.47"]
+    end
+    subgraph Sched["Scheduling"]
+        Quartz["quartz v2.3.2"]
+    end
+    subgraph GUI["GUI Framework"]
+        FlatLaf["flatlaf v3.5.2"]
+        FlatExtras["flatlaf-extras v3.5.2"]
+        FlatThemes["flatlaf-intellij-themes v3.5.2"]
+        FormsRT["forms-rt v7.0.3"]
+    end
+    subgraph Log["Logging"]
+        Logback["logback-classic v1.2.3"]
+    end
+    subgraph Util["Utilities"]
+        Hutool["hutool-all v5.6.4"]
+        Lombok["lombok v1.18.30"]
+        Fastjson["fastjson v1.2.74"]
+        OkHttp["okhttp v4.9.1"]
+        HttpAsync["httpasyncclient v4.1.4"]
+        Velocity["velocity-engine-core v2.3"]
+        POI["poi-ooxml v4.1.2"]
+        OpenCSV["opencsv v5.2"]
+        JsonPath["json-path v2.6.0"]
+        EmojiJava["emoji-java v5.1.1"]
+        CPDetector["cpdetector (local)"]
+    end
+
+    App -->|"messaging SDKs"| Messaging
+    App -->|"cloud APIs"| CloudSDK
+    App -->|"persistence"| DB
+    App -->|"scheduling"| Sched
+    App -->|"desktop UI"| GUI
+    App -->|"logging"| Log
+    App -->|"utilities"| Util
+</div>
+<h3 id="dependency-summary">Dependency Summary</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Category</th><th>Count</th><th>Key Libraries</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td>Messaging / Push SDKs</td><td>7</td><td>weixin-java-mp/miniapp/cp 4.6.0, javax.mail 1.6.2, tencentcloud-sdk-java 3.1.847</td><td>Core value-add libraries; WeiXin SDK 4.6.0 is current</td></tr>
+<tr><td>Cloud Provider SDKs</td><td>4</td><td>aliyun-java-sdk-core 4.4.2, bce-java-sdk 0.10.134, qiniu-java-sdk 7.3.0</td><td>Each SDK pins its own transitive HTTP client versions</td></tr>
+<tr><td>Database / ORM</td><td>3</td><td>mybatis 3.5.13, sqlite-jdbc 3.43.0.0, mysql-connector-java 5.1.47</td><td>MySQL connector is on the old 5.x branch</td></tr>
+<tr><td>Scheduling</td><td>1</td><td>quartz 2.3.2</td><td>Quartz 2.3.x is in maintenance mode</td></tr>
+<tr><td>GUI Framework</td><td>4</td><td>flatlaf 3.5.2, forms-rt 7.0.3</td><td>FlatLaf is actively maintained; forms-rt is IntelliJ-specific</td></tr>
+<tr><td>Logging</td><td>1</td><td>logback-classic 1.2.3</td><td>Declared as <code>provided</code> scope</td></tr>
+<tr><td>Utilities</td><td>11</td><td>hutool-all 5.6.4, fastjson 1.2.74, okhttp 4.9.1, poi-ooxml 4.1.2</td><td>Several outdated versions (see risks below)</td></tr>
+</tbody></table></div>
+<h3 id="version-compatibility-risks">Version & Compatibility Risks</h3>
+<p><strong>mysql-connector-java 5.1.47</strong> is on the legacy GPL 5.x driver line, which reached end-of-active-development; the current connector is 8.x (Connector/J). <strong>fastjson 1.2.74</strong> has multiple known CVEs in the 1.x series (arbitrary code execution via auto-type deserialization); the library was superseded by fastjson2. <strong>logback-classic 1.2.3</strong> predates the CVE-2021-42550 fix (patched in 1.2.9+) and the newer 1.5.x/2.x releases. <strong>httpasyncclient 4.1.4</strong> depends on the legacy Apache HttpComponents 4.x stack, which is in maintenance mode. <strong>quartz 2.3.2</strong> (2019) is the last stable release on the 2.x branch with no planned 3.x successor, limiting cloud-native scheduling migration options. <strong>HikariCP</strong> is defined in <code><properties></code> at version 3.4.5 but its <code><dependency></code> block is commented out, meaning the connection pool is either pulled transitively or not used at runtime.</p>
+<h3 id="notable-observations">Notable Observations</h3>
+<ul>
+<li><strong>Overlapping HTTP client libraries</strong>: The project simultaneously declares <code>okhttp</code>, <code>httpasyncclient</code> (Apache HC4), and each WeChat/Cloud SDK brings its own HTTP client transitively, leading to multiple competing HTTP stacks on the classpath.</li>
+<li><strong>Local/vendored JARs</strong>: <code>cpdetector</code>, <code>antlr</code>, <code>chardet</code>, <code>jargs</code>, and <code>taobao-sdk-java-auto</code> are declared via <code><scope>system</scope></code> with paths under <code>src/main/lib</code>, which is incompatible with standard Maven build pipelines and CI/CD.</li>
+<li><strong>fastjson 1.x security risk</strong>: <code>fastjson 1.2.74</code> is in the 1.x series known for critical deserialization CVEs. Upgrading to fastjson2 or Jackson requires API changes throughout the codebase.</li>
+<li><strong>No connection-pool JAR declared</strong>: HikariCP is referenced in source code (<code>HikariUtil.java</code>) but its Maven dependency is commented out; the pool may arrive only as a transitive dependency of another library.</li>
+</ul>
+<h2 id="test-dependencies">Test Dependencies</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Framework</th><th>Version</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td>JUnit</td><td>4.13.1</td><td>Classic JUnit 4 (test scope); no migration to JUnit 5 detected</td></tr>
+</tbody></table></div>
+<p>Total test-scope dependencies: 1</p>
+<p>Only a single test dependency (JUnit 4) is declared. There is no mocking library (Mockito), assertion library (AssertJ/Hamcrest beyond built-ins), or integration test framework detected. Test coverage is therefore expected to be minimal for this desktop application.</p></div>
+</div>
+<div id="tab-data" class="tab-panel">
+  <div class="fact-content"><h1 id="data-architecture-persistence-layer">Data Architecture & Persistence Layer</h1>
+<p>WePush uses MyBatis 3.5.13 as its ORM layer with 9 mapped tables, backed by an embedded SQLite database for local use and an optional MySQL connection for team scenarios.</p>
+<h2 id="database-configuration">Database Configuration</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service/Module</th><th>DB Type</th><th>Profile</th><th>Driver</th><th>Connection</th><th>Migration Tool</th>
+</tr></thead><tbody>
+<tr><td>WePush Desktop (primary)</td><td>SQLite 3.43</td><td>Default (always active)</td><td><code>org.sqlite.JDBC</code> (sqlite-jdbc 3.43.0.0)</td><td><code>jdbc:sqlite:<CONFIG_HOME>/WePush.db</code> — in-process file</td><td>None; schema initialised from <code>db_init.sql</code> at first launch via <code>MybatisUtil.initDbFile()</code></td></tr>
+<tr><td>WePush Desktop (optional)</td><td>MySQL 5.x</td><td>User-configured (HikariCP)</td><td><code>mysql-connector-java 5.1.47</code></td><td><code>jdbc:mysql://<user-configured URL></code> managed by <code>HikariUtil</code></td><td>None; MySQL is used for people-data queries only (raw SQL via <code>HikariUtil.executeQuery</code>)</td></tr>
+</tbody></table></div>
+<p>No migration tool (Flyway, Liquibase, etc.) is in use. Schema DDL is maintained manually in <code>db_init.sql</code> and applied only at initial database creation. Incremental schema changes are handled by <code>UpgradeUtil</code>, which runs hand-crafted ALTER TABLE statements on version upgrade.</p>
+<h2 id="data-ownership-per-service">Data Ownership per Service</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Tables Owned</th><th>ORM Framework</th><th>Caching</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td>WePush Desktop App</td><td>t_account, t_msg, t_people, t_people_data, t_people_import_config, t_task, t_task_ext (via TTaskExtMapper), t_task_his, t_wx_mp_user</td><td>MyBatis 3.5.13 (XML mappers)</td><td>None (no second-level cache configured in mybatis-config.xml)</td><td>Single-process app; all tables owned by the same application module</td></tr>
+<tr><td>MySQL (optional)</td><td>External user-owned tables (people data import source)</td><td>Raw JDBC via HikariUtil</td><td>None</td><td>MySQL is a read-only import source; application data is always written to SQLite</td></tr>
+</tbody></table></div>
+<h2 id="entity-model">Entity Model</h2>
+<div class="mermaid">
+erDiagram
+    TTask ||--o{ TTaskHis : "has history"
+    TTask }o--|| TMsg : "uses message"
+    TTask }o--|| TAccount : "uses account"
+    TTask }o--|| TPeople : "targets people"
+    TMsg }o--|| TAccount : "belongs to account"
+    TPeople ||--o{ TPeopleData : "contains recipients"
+    TPeople ||--o| TPeopleImportConfig : "has import config"
+    TPeople }o--|| TAccount : "linked to account"
+
+    TTask {
+        int id PK
+        string title
+        int msgType
+        int accountId FK
+        int messageId FK
+        int peopleId FK
+        int taskMode
+        int taskPeriod
+        int periodType
+        string periodTime
+        string cron
+        int threadCnt
+        int maxThreadCnt
+        int reimportPeople
+        int resultAlert
+        string alertEmails
+        int saveResult
+        int intervalPush
+        int intervalTime
+        string createTime
+        string modifiedTime
+    }
+    TTaskHis {
+        int id PK
+        int taskId FK
+        string startTime
+        string endTime
+        int totalCnt
+        int successCnt
+        int failCnt
+        int status
+        int dryRun
+        string successFilePath
+        string failFilePath
+        string noSendFilePath
+        string logFilePath
+        int taskMode
+        string createTime
+        string modifiedTime
+    }
+    TMsg {
+        int id PK
+        int msgType
+        int accountId FK
+        string msgName
+        string content
+        string previewUser
+        string createTime
+        string modifiedTime
+    }
+    TAccount {
+        int id PK
+        int msgType
+        string accountName
+        string accountConfig
+        string remark
+        string createTime
+        string modifiedTime
+    }
+    TPeople {
+        int id PK
+        int msgType
+        int accountId FK
+        string peopleName
+        string appVersion
+        string createTime
+        string modifiedTime
+    }
+    TPeopleData {
+        int id PK
+        int peopleId FK
+        string pin
+        string varData
+        string appVersion
+        string dataVersion
+        string createTime
+        string modifiedTime
+    }
+    TPeopleImportConfig {
+        int id PK
+        int peopleId FK
+        string lastWay
+        string lastFilePath
+        string lastSql
+        string lastWayConfig
+        string lastDataVersion
+        string createTime
+        string modifiedTime
+    }
+    TWxMpUser {
+        string openId PK
+        string nickname
+        string sexDesc
+        int sex
+        string language
+        string city
+        string province
+        string country
+        string headImgUrl
+        string subscribeTime
+        string unionId
+        int groupId
+        string subscribeScene
+        string qrScene
+        string createTime
+        string modifiedTime
+    }
+</div>
+<h2 id="key-repository-methods">Key Repository Methods</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Repository</th><th>Entity</th><th>Notable Custom Methods</th><th>Purpose</th>
+</tr></thead><tbody>
+<tr><td>TTaskMapper</td><td>TTask</td><td><code>selectAll()</code></td><td>Returns all tasks for the task management UI</td></tr>
+<tr><td>TTaskExtMapper</td><td>TTask</td><td><code>selectByTitle(String title)</code>, <code>selectAll()</code></td><td>Named-task lookup and full list for Quartz job reload</td></tr>
+<tr><td>TTaskHisMapper</td><td>TTaskHis</td><td><code>selectByTaskId(Integer taskId)</code></td><td>Retrieves all run history records for a given task, ordered by <code>create_time</code> desc</td></tr>
+<tr><td>TMsgMapper</td><td>TMsg</td><td><code>selectByMsgTypeAndAccountId(int, Integer)</code>, <code>selectByUnique(int, Integer, String)</code></td><td>Filter messages by channel type + account; uniqueness check on (type, account, name)</td></tr>
+<tr><td>TAccountMapper</td><td>TAccount</td><td><code>selectByMsgType(int)</code>, <code>selectByMsgTypeAndAccountName(int, String)</code>, <code>deleteByMsgTypeAndAccountName(int, String)</code>, <code>updateByMsgTypeAndAccountName(TAccount)</code></td><td>Account lookup and management by channel type</td></tr>
+<tr><td>TPeopleMapper</td><td>TPeople</td><td><code>selectAll()</code></td><td>Returns all people groups for the people management UI</td></tr>
+<tr><td>TPeopleDataMapper</td><td>TPeopleData</td><td><code>selectByPeopleId(Integer)</code>, <code>selectByPeopleIdLimit20(Integer)</code>, <code>selectByPeopleIdAndKeyword(Integer, String)</code>, <code>countByPeopleId(Integer)</code>, <code>deleteByPeopleId(Integer)</code></td><td>Recipient list access — full load for push execution, paginated preview, keyword search, count, and bulk delete</td></tr>
+<tr><td>TPeopleImportConfigMapper</td><td>TPeopleImportConfig</td><td><code>selectByPeopleId(Integer)</code></td><td>Load the most recent import configuration for a people group</td></tr>
+<tr><td>TWxMpUserMapper</td><td>TWxMpUser</td><td><code>deleteAll()</code></td><td>Bulk clear of the WeChat MP user cache table before re-importing followers</td></tr>
+</tbody></table></div>
+<h2 id="caching-strategy">Caching Strategy</h2>
+<p>WePush does not use a dedicated caching framework (no Spring Cache, EhCache, Redis, Caffeine, or MyBatis second-level cache is configured). The MyBatis <code>mybatis-config.xml</code> uses the default <code>POOLED</code> datasource with no cache settings.</p>
+<p><strong>Application-level in-memory maps</strong> are used as lightweight caches:</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Component</th><th>Cache Type</th><th>Key</th><th>Scope</th><th>Eviction</th>
+</tr></thead><tbody>
+<tr><td><code>HttpMsgSender.okHttpClientMap</code></td><td><code>HashMap<Integer, OkHttpClient></code></td><td>Account ID</td><td>Static class field</td><td>Explicit removal via <code>removeAccount(id)</code> on account deletion</td></tr>
+<tr><td><code>MailMsgSender.mailAccountMap</code></td><td><code>HashMap<Integer, MailAccount></code></td><td>Account ID</td><td>Static class field</td><td>Explicit removal via <code>removeAccount(id)</code> on account deletion</td></tr>
+<tr><td><code>WxMpTemplateMsgSender.wxMpServiceMap</code></td><td><code>HashMap<Integer, WxMpService></code></td><td>Account ID</td><td>Static class field</td><td>No eviction; service instance reused across sends</td></tr>
+</tbody></table></div>
+<p>These maps avoid re-initialising expensive SDK clients (HTTP connection pools, WeChat access-token holders) on every send. No TTL, maximum-size, or thread-safe eviction policy is enforced — the maps are unsynchronised <code>HashMap</code>s and may exhibit race conditions under concurrent access.</p>
+<h2 id="data-ownership-boundaries">Data Ownership Boundaries</h2>
+<p><strong>Single data store (SQLite)</strong>. All application data lives in a single SQLite file at <code><CONFIG_HOME>/WePush.db</code>. There is no database-per-service separation because WePush is a single-process desktop application. All MyBatis mappers share the same <code>SqlSession</code> instance obtained from <code>MybatisUtil.getSqlSession()</code>.</p>
+<p><strong>MySQL as import source only</strong>. When the user configures a MySQL data source, the application uses <code>HikariUtil.executeQuery(sql)</code> to run a raw SELECT and populate <code>TPeopleData</code> records into SQLite. MySQL is never written to and acts purely as an external read source for recipient data.</p>
+<p><strong>No cross-service data access</strong>. Because WePush is a monolithic desktop application, all data access is direct mapper calls within the same process. There are no remote service calls, shared-database multi-tenant scenarios, or CQRS read/write separations.</p>
+<h3 id="data-classification-sensitivity">Data Classification & Sensitivity</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Entity</th><th>Sensitive Fields</th><th>Classification</th><th>Controls in Place</th>
+</tr></thead><tbody>
+<tr><td>TAccount</td><td><code>accountConfig</code> (stores AppId, AppSecret, API keys, SMTP passwords as JSON)</td><td>Confidential / Credentials</td><td>No encryption at rest; stored as plaintext JSON in SQLite</td></tr>
+<tr><td>TWxMpUser</td><td><code>openId</code>, <code>nickname</code>, <code>unionId</code>, <code>headImgUrl</code>, <code>city</code>, <code>province</code>, <code>country</code></td><td>PII (WeChat user profile data)</td><td>No encryption at rest or masking; stored as plaintext in SQLite</td></tr>
+<tr><td>TPeopleData</td><td><code>pin</code> (user identifier / phone / openId), <code>varData</code> (arbitrary variable data)</td><td>PII (recipient personal identifiers)</td><td>No encryption at rest; stored as plaintext in SQLite</td></tr>
+<tr><td>TTask</td><td><code>alertEmails</code> (email addresses for result notifications)</td><td>PII (email addresses)</td><td>No encryption at rest; stored as plaintext</td></tr>
+<tr><td>TMsg</td><td><code>content</code> (message body may contain PII if templated with personal data)</td><td>Potentially PII</td><td>No controls; content stored as plaintext</td></tr>
+</tbody></table></div>
+<p><strong>Summary</strong>: The application stores platform credentials (API keys, SMTP passwords) and WeChat user PII without encryption at rest. No field-level access controls, data masking, or audit logging are implemented. The SQLite database file is protected only by operating-system file permissions.</p></div>
+</div>
+<p class="footer">Your feedback is invaluable &mdash; <a href="https://aka.ms/ghcp-appmod/feedback">Share feedback</a></p>
+<script>
+function toggleRow(rowId, triggerRow) {
+  var detail = document.getElementById(rowId);
+  var btn = document.getElementById('btn-' + rowId);
+  if (!detail) return;
+  var visible = detail.style.display !== 'none';
+  detail.style.display = visible ? 'none' : 'table-row';
+  if (btn) btn.classList.toggle('open', !visible);
+}
+(function() {
+  var nav = document.querySelector('.tab-nav');
+  if (!nav) return;
+  nav.addEventListener('click', function(e) {
+    var btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    var targetId = btn.getAttribute('data-tab');
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    var panel = document.getElementById(targetId);
+    if (panel) {
+      panel.classList.add('active');
+      if (window.__mermaidReady) { window.__renderMermaidIn(panel); }
+    }
+  });
+})();
+
+// ── Diagram lightbox ────────────────────────────────────────
+(function() {
+  var lightbox = document.getElementById('diagram-lightbox');
+  var inner = document.getElementById('diagram-lightbox-inner');
+  var closeBtn = document.getElementById('diagram-lightbox-close');
+  if (!lightbox || !inner || !closeBtn) return;
+
+  var scale = 1;
+  var translateX = 0;
+  var translateY = 0;
+  var isDragging = false;
+  var dragStartX = 0;
+  var dragStartY = 0;
+
+  function applyTransform() {
+    var svg = inner.querySelector('svg');
+    if (svg) {
+      svg.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px) scale(' + scale + ')';
+      svg.style.transformOrigin = 'center center';
+      svg.style.transition = 'none';
+    }
+  }
+
+  function resetTransform() {
+    scale = 1; translateX = 0; translateY = 0;
+    applyTransform();
+  }
+
+  function openLightbox(svgEl) {
+    inner.innerHTML = svgEl.outerHTML;
+    var injected = inner.querySelector('svg');
+    if (injected) {
+      injected.removeAttribute('width');
+      injected.removeAttribute('height');
+      injected.style.cursor = 'grab';
+    }
+    resetTransform();
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    inner.innerHTML = '';
+    document.body.style.overflow = '';
+    resetTransform();
+  }
+
+  inner.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    var delta = e.deltaY > 0 ? 0.9 : 1.1;
+    scale = Math.min(Math.max(scale * delta, 0.3), 8);
+    applyTransform();
+  }, { passive: false });
+
+  inner.addEventListener('mousedown', function(e) {
+    if (e.button !== 0) return;
+    isDragging = true;
+    dragStartX = e.clientX - translateX;
+    dragStartY = e.clientY - translateY;
+    var svg = inner.querySelector('svg');
+    if (svg) { svg.style.cursor = 'grabbing'; }
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    translateX = e.clientX - dragStartX;
+    translateY = e.clientY - dragStartY;
+    applyTransform();
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (!isDragging) return;
+    isDragging = false;
+    var svg = inner.querySelector('svg');
+    if (svg) { svg.style.cursor = 'grab'; }
+  });
+
+  inner.addEventListener('dblclick', function() { resetTransform(); });
+
+  document.addEventListener('click', function(e) {
+    var card = e.target.closest('.mermaid');
+    if (!card) return;
+    if (e.target.closest('.diagram-lightbox-close')) return;
+    var svg = card.querySelector('svg');
+    if (svg) { openLightbox(svg); }
+  });
+
+  closeBtn.addEventListener('click', closeLightbox);
+
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) { closeLightbox(); }
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeLightbox(); }
+  });
+})();
+
+var _currentTarget = '';
+
+function toggleMultiSelect(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  document.querySelectorAll('.multi-select.open').forEach(function(ms) { if (ms.id !== id) ms.classList.remove('open'); });
+  el.classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.multi-select')) {
+    document.querySelectorAll('.multi-select.open').forEach(function(ms) { ms.classList.remove('open'); });
+  }
+});
+
+function getMultiSelectValues(msId) {
+  var el = document.getElementById(msId);
+  if (!el) return [];
+  var checked = el.querySelectorAll('input[type=checkbox]:checked');
+  var vals = [];
+  for (var i = 0; i < checked.length; i++) vals.push(checked[i].value);
+  return vals;
+}
+
+function onMultiSelectChange(msId, label) {
+  var el = document.getElementById(msId);
+  if (!el) return;
+  var vals = getMultiSelectValues(msId);
+  var total = el.querySelectorAll('input[type=checkbox]').length;
+  var btn = el.querySelector('.multi-select-btn');
+  if (btn) {
+    btn.textContent = vals.length > 0 && vals.length < total ? label + ' (' + vals.length + ')' : label;
+  }
+  applyFilters();
+}
+
+function applyFilters() {
+  var selectedDomains = getMultiSelectValues('domain-ms');
+  var selectedCrits = getMultiSelectValues('criticality-ms');
+
+  var sections = document.querySelectorAll('.issue-section');
+  for (var i = 0; i < sections.length; i++) {
+    var domain = sections[i].getAttribute('data-domain');
+    sections[i].style.display = (selectedDomains.length === 0 || selectedDomains.indexOf(domain) >= 0) ? '' : 'none';
+  }
+
+  var rows = document.querySelectorAll('.issue-row');
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var section = row.closest('.issue-section');
+    if (section && section.style.display === 'none') {
+      row.style.display = 'none';
+      var next = row.nextElementSibling;
+      if (next && next.classList.contains('detail-row')) next.style.display = 'none';
+      continue;
+    }
+
+    var show = true;
+    if (_currentTarget && row.hasAttribute('data-targets')) {
+      var targetsStr = row.getAttribute('data-targets');
+      if (targetsStr && targetsStr !== '{}') {
+        try {
+          var targets = JSON.parse(targetsStr);
+          if (Object.keys(targets).length > 0 && !targets[_currentTarget]) {
+            show = false;
+          }
+        } catch(e) {}
+      }
+    }
+
+    if (show && selectedCrits.length > 0) {
+      var crit = row.getAttribute('data-criticality');
+      if (selectedCrits.indexOf(crit) < 0) show = false;
+    }
+
+    row.style.display = show ? '' : 'none';
+    var nextRow = row.nextElementSibling;
+    if (nextRow && nextRow.classList.contains('detail-row')) {
+      if (!show) nextRow.style.display = 'none';
+    }
+  }
+}
+
+function clearAllFilters() {
+  document.querySelectorAll('.multi-select input[type=checkbox]').forEach(function(cb) { cb.checked = false; });
+  var domainBtn = document.querySelector('#domain-ms .multi-select-btn');
+  if (domainBtn) domainBtn.textContent = 'Domain';
+  var critBtn = document.querySelector('#criticality-ms .multi-select-btn');
+  if (critBtn) critBtn.textContent = 'Criticality';
+  applyFilters();
+}
+
+function onTargetChange(targetId) {
+  _currentTarget = targetId;
+  var rows = document.querySelectorAll('.issue-row[data-targets]');
+  var totalEffort = 0;
+  var domainCrits = {};
+
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var targets = JSON.parse(row.getAttribute('data-targets'));
+    var section = row.closest('.issue-section');
+    var domain = section ? section.getAttribute('data-domain') : '';
+
+    if (!targets || Object.keys(targets).length === 0) {
+      var sp = parseFloat(row.querySelector('.sp-cell').textContent) || 0;
+      totalEffort += sp;
+      if (!domainCrits[domain]) domainCrits[domain] = {mandatory:0,potential:0,optional:0};
+      var crit = row.getAttribute('data-criticality') || 'optional';
+      domainCrits[domain][crit] = (domainCrits[domain][crit] || 0) + 1;
+      continue;
+    }
+
+    var override = targets[targetId];
+    if (!override) {
+      continue;
+    }
+
+    var newSeverity = (override.severity || row.getAttribute('data-default-severity') || '').toLowerCase();
+    row.setAttribute('data-criticality', newSeverity);
+    var critCell = row.querySelector('.crit-cell');
+    if (critCell) {
+      var critText = newSeverity === 'mandatory' ? 'Mandatory' : newSeverity === 'potential' ? 'Potential' : 'Optional';
+      var cssClass = newSeverity === 'mandatory' ? 'crit-square-mandatory' : newSeverity === 'potential' ? 'crit-square-potential' : 'crit-square-optional';
+      critCell.innerHTML = '<span class="crit-label"><span class="crit-square ' + cssClass + '"></span>' + critText + '</span>';
+    }
+
+    var newEffort = override.effort !== undefined ? override.effort : parseFloat(row.getAttribute('data-default-effort')) || 0;
+    var spCell = row.querySelector('.sp-cell');
+    if (spCell) spCell.textContent = newEffort;
+    totalEffort += newEffort;
+
+    if (!domainCrits[domain]) domainCrits[domain] = {mandatory:0,potential:0,optional:0};
+    domainCrits[domain][newSeverity] = (domainCrits[domain][newSeverity] || 0) + 1;
+  }
+
+  var secSection = document.querySelector('.issue-section[data-domain="security"]');
+  if (secSection) {
+    var secRows = secSection.querySelectorAll('.issue-row');
+    for (var j = 0; j < secRows.length; j++) {
+      if (!secRows[j].hasAttribute('data-targets') || secRows[j].getAttribute('data-targets') === '') {
+        var sp = parseFloat(secRows[j].querySelector('.sp-cell').textContent) || 0;
+        totalEffort += sp;
+        if (!domainCrits['security']) domainCrits['security'] = {mandatory:0,potential:0,optional:0};
+        var sc = secRows[j].getAttribute('data-criticality') || 'optional';
+        domainCrits['security'][sc] = (domainCrits['security'][sc] || 0) + 1;
+      }
+    }
+  }
+
+  var label = totalEffort < 20 ? 'S' : totalEffort < 50 ? 'M' : totalEffort < 100 ? 'L' : 'XL';
+  var effortEl = document.getElementById('effort-display');
+  if (effortEl) effortEl.textContent = label + ' (total story points: ' + totalEffort + ')';
+
+  updateDonuts(domainCrits);
+  applyFilters();
+}
+
+function updateDonuts(domainCrits) {
+  var container = document.getElementById('donut-container');
+  if (!container) return;
+  container.innerHTML = '';
+  var domainNames = {'cloud-readiness':'Cloud Readiness','java-upgrade':'Java Upgrade','dotnet-upgrade':'DotNET Upgrade','security':'Security'};
+  var domainOrder = ['cloud-readiness','java-upgrade','dotnet-upgrade','security'];
+  for (var d = 0; d < domainOrder.length; d++) {
+    var key = domainOrder[d];
+    var c = domainCrits[key];
+    if (!c || (c.mandatory + c.potential + c.optional) === 0) continue;
+    var total = c.mandatory + c.potential + c.optional;
+    var div = document.createElement('div');
+    div.className = 'domain-summary-item';
+    div.innerHTML = buildDonutSvg(c.mandatory, c.potential, c.optional) +
+      '<h3>' + domainNames[key] + '</h3>' +
+      '<div class="count">' + total + ' issue' + (total !== 1 ? 's' : '') + '</div>';
+    container.appendChild(div);
+  }
+}
+
+function buildDonutSvg(m, p, o) {
+  var total = m + p + o;
+  if (total === 0) return '<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;"><circle cx="50" cy="50" r="35" fill="none" stroke="#d0d7de" stroke-width="15" opacity="0.5"/></svg>';
+  var r = 35, circ = 2 * Math.PI * r, offset = 0;
+  var svg = '<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;transform:rotate(-90deg);">';
+  var segs = [{c:m,color:'var(--color-mandatory)'},{c:p,color:'var(--color-potential)'},{c:o,color:'var(--color-optional)'}];
+  for (var i = 0; i < segs.length; i++) {
+    if (segs[i].c === 0) continue;
+    var segLen = (segs[i].c / total) * circ;
+    var gap = total > segs[i].c ? 1.5 : 0;
+    var drawLen = Math.max(segLen - gap, 0.5);
+    svg += '<circle cx="50" cy="50" r="' + r + '" fill="none" stroke="' + segs[i].color + '" stroke-width="15" stroke-dasharray="' + drawLen.toFixed(2) + ' ' + circ.toFixed(2) + '" stroke-dashoffset="' + (-offset).toFixed(2) + '"/>';
+    offset += segLen;
+  }
+  svg += '</svg>';
+  return svg;
+}
+</script>
+<script>document.addEventListener('DOMContentLoaded', function() { onTargetChange('azure-aks'); });</script>
+</div></body></html>
